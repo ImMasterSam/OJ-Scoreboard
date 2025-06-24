@@ -1,0 +1,12 @@
+*.xlsx
+*.xls
+*.csv
+*.txt
+*.pkl
+
+chromedriver.*
+test.*
+**/__pycache__/
+
+settings.json
+/Json/Subs_data.json

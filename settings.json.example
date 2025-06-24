@@ -1,0 +1,32 @@
+{
+    "Zerojudge": {
+        "Username": "...",
+        "Password": "..."
+    },
+    "UVa": {
+        "UserId": "..."
+    },
+    "Kattis": {
+        "UserId": "...",
+        "Password": "..."
+    },
+    "TOJ": {
+        "UserId": "..."
+    },
+    "AtCoder": {
+        "Username": "."
+    },
+    "CodeForces": {
+        "Key": "...",
+        "Secret": "...",
+        "Handle": "..."
+    },
+    "MySQL": {
+        "Host": "...",
+        "Port": "...",
+        "User": "...",
+        "Password": "...",
+        "Database": "...",
+        "Table": "..."
+    }
+}
