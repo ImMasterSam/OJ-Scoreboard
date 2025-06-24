@@ -8,7 +8,7 @@ import logging
 import logging.handlers
 from threading import Thread
 
-import pystray
+if os.name == 'nt': import pystray
 from PIL import Image
 
 STARTUP_DELAY = 0           # (Seconds)
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     # 確定 setttings.json 已經存在
     if not os.path.exists('settings.json'):
         logging.critical('settings.json not found !!!')
-        notify(title = "Online Judge 爬蟲", body = f"'CRITICAL ERROR: settings.json not found !!!'")
+        if os.name == 'nt': notify(title = "Online Judge 爬蟲", body = f"'CRITICAL ERROR: settings.json not found !!!'")
         exit(1)
 
     # 延長啟動時間
@@ -71,24 +71,25 @@ if __name__ == "__main__":
     readJson()
 
     # 系統匣顯示
-    ICON = Image.open('Assets/icon.ico')
-    SQL_time = pystray.MenuItem(lambda text : f'SQL: {UPDATE_TIME['SQL']}', action = click)
-    OJs = list(map(lambda i : pystray.MenuItem(lambda text : f'{OJ_LIST[i]}: {UPDATE_TIME['Submissions'][OJ_LIST[i]]}', action = click),  range(len(OJ_LIST))))
-    OJ_time = pystray.MenuItem(text = 'Online Judges', action = pystray.Menu(lambda: OJs))
-    exit = pystray.MenuItem(text = 'Exit', action = click, default = False)
-    MENU_items = [SQL_time, OJ_time, exit]
-    icon = pystray.Icon(name = 'Online Judge Crawler',
-                        title = 'OJ Crawler',
-                        icon = ICON,
-                        menu = pystray.Menu(lambda: MENU_items))
-    trayIcon = Thread(target = icon.run)
-    trayIcon.start()
+    if os.name == 'nt':
+        ICON = Image.open('Assets/icon.ico')
+        SQL_time = pystray.MenuItem(lambda text : f'SQL: {UPDATE_TIME['SQL']}', action = click)
+        OJs = list(map(lambda i : pystray.MenuItem(lambda text : f'{OJ_LIST[i]}: {UPDATE_TIME['Submissions'][OJ_LIST[i]]}', action = click),  range(len(OJ_LIST))))
+        OJ_time = pystray.MenuItem(text = 'Online Judges', action = pystray.Menu(lambda: OJs))
+        exit = pystray.MenuItem(text = 'Exit', action = click, default = False)
+        MENU_items = [SQL_time, OJ_time, exit]
+        icon = pystray.Icon(name = 'Online Judge Crawler',
+                            title = 'OJ Crawler',
+                            icon = ICON,
+                            menu = pystray.Menu(lambda: MENU_items))
+        trayIcon = Thread(target = icon.run)
+        trayIcon.start()
 
     check_lastest_update()
 
     # 每 {CHECK_INTERVAL} 分鐘檢查一次
     schedule.every(CHECK_INTERVAL).minutes.do(check_lastest_update)
-    schedule.every(TRAY_UPDATE_INTERVAL).minutes.do(updateTray, icon)
+    if os.name == 'nt': schedule.every(TRAY_UPDATE_INTERVAL).minutes.do(updateTray, icon)
 
     while Running:
         sleep(1)

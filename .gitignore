@@ -10,3 +10,4 @@ test.*
 
 settings.json
 /Json/Subs_data.json
+/venv/

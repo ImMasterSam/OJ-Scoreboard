@@ -5,15 +5,15 @@ from threading import Thread
 
 from datetime import datetime
 import json
-from os import getcwd
-from win11toast import notify
+import os
+if os.name == 'nt': from win11toast import notify
 import logging
 
 import Crawler
 
 OJ_LIST = ['Zerojudge', 'UVa', 'Kattis', 'TOJ', 'AtCoder', 'CodeForces']
 ICON = {
-    'src': f'{getcwd().replace('\\', '/')}/Assets/Icon.ico',
+    'src': f'{os.getcwd().replace('\\', '/')}/Assets/Icon.ico',
     'placement': 'appLogoOverride'
 }
 
@@ -67,7 +67,10 @@ def check_lastest_update() -> None:
 
     
     if notifyErrors != []:
-        notify(title = "Online Judge 爬蟲", body = f"錯誤資訊 :\n{'\n'.join(notifyErrors)}", icon = ICON)
+        if os.name == 'nt':
+            notify(title = "Online Judge 爬蟲", body = f"錯誤資訊 :\n{'\n'.join(notifyErrors)}", icon = ICON)
+        else:
+            print(f"錯誤資訊 :\n{'\n'.join(notifyErrors)}")
 
     logging.info(f'COMPLETE all possible updates :)')
 

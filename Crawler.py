@@ -2,7 +2,8 @@ import datetime
 from time import time as gettime, sleep
 import json
 from random import randint
-from win11toast import notify
+import os
+if os.name == 'nt': from win11toast import notify
 import logging
 
 import requests
@@ -33,7 +34,10 @@ def Zerojudge() -> pd.DataFrame:
     try:
         browser = webdriver.Chrome(options=chrome_options)
     except:
-        notify(title = "Online Judge 爬蟲", body = f"'CRITICAL ERROR: Unable to find Chrome Driver !!!'")
+        if os.name == 'nt':
+            notify(title = "Online Judge 爬蟲", body = f"'CRITICAL ERROR: Unable to find Chrome Driver !!!'")
+        else:
+            print("'CRITICAL ERROR: Unable to find Chrome Driver !!!'")
         logging.critical('Unable to find Chrome Driver !!!')
         raise WebDriverException
 
@@ -60,7 +64,10 @@ def Zerojudge() -> pd.DataFrame:
     # 檢查是否登入成功
     if browser.current_url == "https://zerojudge.tw/Login":
         error_message = browser.find_element(By.XPATH, '/html/body/div[6]/div/div/div[2]/div/div').text
-        notify(title = "Online Judge 爬蟲", body = f"ERROR: Unable to login Zerojudge !!! ({error_message})")
+        if os.name == 'nt':
+            notify(title = "Online Judge 爬蟲", body = f"ERROR: Unable to login Zerojudge !!! ({error_message})")
+        else:
+            print(f"ERROR: Unable to login Zerojudge !!! ({error_message})")
         logging.error(f"Unable to login Zerojudge !!! ({error_message})")
         raise ValueError(f"Unable to login Zerojudge !!! ({error_message})")
 
@@ -221,7 +228,10 @@ def TOJ() -> pd.DataFrame:
     try:
         browser = webdriver.Chrome(options=chrome_options)
     except:
-        notify(title = "Online Judge 爬蟲", body = f"'CRITICAL ERROR: Unable to find Chrome Driver !!!'")
+        if os.name == 'nt':
+            notify(title = "Online Judge 爬蟲", body = f"'CRITICAL ERROR: Unable to find Chrome Driver !!!'")
+        else:
+            print("'CRITICAL ERROR: Unable to find Chrome Driver !!!'")
         logging.critical('Unable to find Chrome Driver !!!')
         raise WebDriverException
 
