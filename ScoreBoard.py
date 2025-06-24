@@ -4,6 +4,7 @@ import schedule
 from time import sleep
 from sys import exit
 import os
+import sys
 import logging
 import logging.handlers
 from threading import Thread
@@ -16,6 +17,7 @@ CHECK_INTERVAL = 10         # (Minutes)
 TRAY_UPDATE_INTERVAL = 1    # (Minutes)
 LOG_INTERVAL = 1            # (Hours)
 LOGGER_BACKUP = 10000
+log2console = True
 
 UPDATE_TIME: dict = {}
 
@@ -55,6 +57,8 @@ if __name__ == "__main__":
                         format = '[%(levelname)s] %(asctime)s: %(message)s',
                         datefmt = '%Y/%m/%d %H:%M:%S',
                         filename = 'ScoreBoard.log')
+    if log2console:
+        logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
     logging.handlers.TimedRotatingFileHandler(filename = "ScoreBoard.log", 
                                               when = 'H',
                                               interval = LOG_INTERVAL,
