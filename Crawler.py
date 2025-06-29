@@ -25,8 +25,7 @@ def Zerojudge() -> pd.DataFrame:
 
     # 爬蟲瀏覽器參數設定
     chrome_options = Options()
-    if os.name != 'nt':
-        chrome_options.add_argument('--disable-gpu')  # 禁用 GPU 加速
+    # chrome_options.add_argument('--disable-gpu')  # 禁用 GPU 加速
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument('--disable-dev-shm-usage')
     chrome_options.add_argument("--headless")
@@ -34,8 +33,7 @@ def Zerojudge() -> pd.DataFrame:
 
     # 啟動 Webdriver
     try:
-        service = Service('./chromedriver')
-        browser = webdriver.Chrome(service=service, options=chrome_options)
+        browser = webdriver.Chrome(options=chrome_options)
     except:
         if os.name == 'nt':
             notify(title = "Online Judge 爬蟲", body = f"'CRITICAL ERROR: Unable to find Chrome Driver !!!'")
