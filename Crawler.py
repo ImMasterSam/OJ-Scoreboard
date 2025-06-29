@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 import hashlib
 
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -24,7 +25,8 @@ def Zerojudge() -> pd.DataFrame:
 
     # 爬蟲瀏覽器參數設定
     chrome_options = Options()
-    # chrome_options.add_argument('--disable-gpu')  # 禁用 GPU 加速
+    if os.name != 'nt':
+        chrome_options.add_argument('--disable-gpu')  # 禁用 GPU 加速
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument('--disable-dev-shm-usage')
     chrome_options.add_argument("--headless")
@@ -32,12 +34,13 @@ def Zerojudge() -> pd.DataFrame:
 
     # 啟動 Webdriver
     try:
-        browser = webdriver.Chrome(options=chrome_options)
+        service = Service('./chromedriver')
+        browser = webdriver.Chrome(service=service, options=chrome_options)
     except:
         if os.name == 'nt':
             notify(title = "Online Judge 爬蟲", body = f"'CRITICAL ERROR: Unable to find Chrome Driver !!!'")
         else:
-            print("'CRITICAL ERROR: Unable to find Chrome Driver !!!'")
+            print("CRITICAL ERROR: Unable to find Chrome Driver !!!")
         logging.critical('Unable to find Chrome Driver !!!')
         raise WebDriverException
 
