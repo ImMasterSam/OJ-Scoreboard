@@ -20,13 +20,5 @@
         "Key": "...",
         "Secret": "...",
         "Handle": "..."
-    },
-    "MySQL": {
-        "Host": "...",
-        "Port": "...",
-        "User": "...",
-        "Password": "...",
-        "Database": "...",
-        "Table": "..."
     }
 }

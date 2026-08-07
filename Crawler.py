@@ -3,7 +3,6 @@ from time import time as gettime, sleep
 import json
 from random import randint
 import os
-if os.name == 'nt': from win11toast import notify
 import logging
 
 import requests
@@ -28,17 +27,14 @@ def Zerojudge() -> pd.DataFrame:
     # chrome_options.add_argument('--disable-gpu')  # 禁用 GPU 加速
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument('--disable-dev-shm-usage')
-    chrome_options.add_argument("--headless")
+    # chrome_options.add_argument("--headless")
     # chrome_options.add_argument('--user-data-dir=C:/Users/USER/AppData/Local/Google/Chrome/User Data') # 使用 Chrome 的使用者資料
 
     # 啟動 Webdriver
     try:
         browser = webdriver.Chrome(options=chrome_options)
     except:
-        if os.name == 'nt':
-            notify(title = "Online Judge 爬蟲", body = f"'CRITICAL ERROR: Unable to find Chrome Driver !!!'")
-        else:
-            print("CRITICAL ERROR: Unable to find Chrome Driver !!!")
+        print("CRITICAL ERROR: Unable to find Chrome Driver !!!")
         logging.critical('Unable to find Chrome Driver !!!')
         raise WebDriverException
 
@@ -64,20 +60,15 @@ def Zerojudge() -> pd.DataFrame:
 
     # 檢查是否登入成功
     if browser.current_url == "https://zerojudge.tw/Login":
-        error_message = browser.find_element(By.XPATH, '/html/body/div[6]/div/div/div[2]/div/div').text
-        if os.name == 'nt':
-            notify(title = "Online Judge 爬蟲", body = f"ERROR: Unable to login Zerojudge !!! ({error_message})")
-        else:
-            print(f"ERROR: Unable to login Zerojudge !!! ({error_message})")
+        error_message = browser.find_element(By.XPATH, '/html/body/div[5]/div/div/div[2]/div').text
+        print(f"ERROR: Unable to login Zerojudge !!! ({error_message})")
         logging.error(f"Unable to login Zerojudge !!! ({error_message})")
         raise ValueError(f"Unable to login Zerojudge !!! ({error_message})")
 
     # 進入使用者解題統計頁面
     browser.get("https://zerojudge.tw/UserStatistic")
 
-    a = browser.find_element(By.XPATH, "/html/body/div[3]/div/div[1]/div/div[2]/div[3]/a")
-    user = browser.find_element(By.XPATH, '/html/body/div[3]/div/div[1]/div/div[2]/h4/span[1]/a').get_attribute("title")
-    url = a.get_attribute("href")
+    url = browser.find_element(By.XPATH, "/html/body/div[3]/div/div[1]/div/div[2]/div[9]/a").get_attribute("href")
 
     # 保存 cookie
     cookies = browser.get_cookies()
@@ -101,8 +92,8 @@ def Zerojudge() -> pd.DataFrame:
                 tds = i.find_all('td')
                 title = tds[2].text.lstrip().replace('\r', '').replace('\n', '').split(' -- #')[0]
                 date = tds[5].getText().lstrip().replace('\r', '').replace('\n', '').replace('\t', '')
-                result = tds[3].find_all('a')[1].text
-                t_lang = tds[4].select_one('#btn_SolutionCode').text
+                result = tds[3].find_all('a')[0].text
+                t_lang = tds[4].select_one('.btn-default').text
                 lang = lang_d[t_lang]
 
                 if(result == "NA"):
@@ -117,9 +108,10 @@ def Zerojudge() -> pd.DataFrame:
 
                 raw_data.append(submission_data)
 
-        url = 'https://zerojudge.tw/Submissions' + soup.select_one('#pagging').find('a', title='lastpage=')['href']
+        url = 'https://zerojudge.tw/Submissions' + soup.select_one('#pagging').find_all('a')[-1]['href']
+        print(url)
 
-        if len(soup.select("tr")) == 2:
+        if len(soup.select("tr")) <= 2:
             break
 
     submission_df = pd.DataFrame(raw_data)
@@ -229,10 +221,7 @@ def TOJ() -> pd.DataFrame:
     try:
         browser = webdriver.Chrome(options=chrome_options)
     except:
-        if os.name == 'nt':
-            notify(title = "Online Judge 爬蟲", body = f"'CRITICAL ERROR: Unable to find Chrome Driver !!!'")
-        else:
-            print("'CRITICAL ERROR: Unable to find Chrome Driver !!!'")
+        print("'CRITICAL ERROR: Unable to find Chrome Driver !!!'")
         logging.critical('Unable to find Chrome Driver !!!')
         raise WebDriverException
 
@@ -363,6 +352,7 @@ def CodeForces() -> pd.DataFrame:
     complier_dict = {"C++17 (GCC 7-32)" : "C++",
                     "GNU C11" : "C++",
                     "C++23 (GCC 14-64, winlibs)" : "C++",
+                    "C++23 (GCC 14-64, msys2)" : "C++",
                     "Python 3" : "Python",
                     "PyPy 3" : "Python"}
     result_dict = {"OK" : "AC",

@@ -12,17 +12,20 @@ offset = 0
 
 d = dict()
 
-while(offset <= 600):
+while True:
 
-    browser.get(f"https://toj.tfcis.org/oj/proset/?off={offset}")
+    browser.get(f"https://toj.tfcis.org/oj/proset/?pageoff={offset}&topcoder=ignore")
     sleep(1)
 
     titles = browser.find_elements(By.TAG_NAME, 'tr')
 
+    if len(titles) <= 2:
+        break
 
-    for i in range(len(titles)-1):
+    for i in range(len(titles)-2):
 
-        temp = titles[i+1]
+        temp = titles[i+2]
+        print(temp.text)
 
         id = temp.find_elements(By.TAG_NAME, 'td')[0].text
         title = temp.find_elements(By.TAG_NAME, 'td')[2].text
@@ -34,4 +37,4 @@ while(offset <= 600):
     offset += 40
 
 browser.close()
-json.dump(d, open("JSon/Proset.json", "w+"))
+json.dump(d, open("Json/Proset.json", "w+"))

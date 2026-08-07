@@ -1,0 +1,12 @@
+[project]
+name = "oj-scoreboard"
+version = "26.8"
+description = "A OJ Scoreboard for competitive programming."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "autokattis>=2.1.5",
+    "bs4>=0.0.2",
+    "requests>=2.34.2",
+    "selenium>=4.46.0",
+]
