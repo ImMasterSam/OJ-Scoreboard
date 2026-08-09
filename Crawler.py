@@ -27,7 +27,7 @@ def Zerojudge() -> pd.DataFrame:
     # chrome_options.add_argument('--disable-gpu')  # 禁用 GPU 加速
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument('--disable-dev-shm-usage')
-    # chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--headless")
     # chrome_options.add_argument('--user-data-dir=C:/Users/USER/AppData/Local/Google/Chrome/User Data') # 使用 Chrome 的使用者資料
 
     # 啟動 Webdriver
@@ -56,10 +56,11 @@ def Zerojudge() -> pd.DataFrame:
     # Google = browser.find_element(By.XPATH,'/html[1]/body[1]/div[4]/div[2]/div[2]/a[1]')
     # Google.click()
 
-    sleep(0.5)  # 等待頁面載入
+    sleep(5)  # 等待頁面載入
 
     # 檢查是否登入成功
     if browser.current_url == "https://zerojudge.tw/Login":
+        sleep(2)
         error_message = browser.find_element(By.XPATH, '/html/body/div[5]/div/div/div[2]/div').text
         print(f"ERROR: Unable to login Zerojudge !!! ({error_message})")
         logging.error(f"Unable to login Zerojudge !!! ({error_message})")

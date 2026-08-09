@@ -11,7 +11,7 @@ def getSubs():
     UVa_AC = Crawler.UVa()
     print("完成 UVa 資料")
 
-    Kat_AC = Crawler.Kat()
+    Kat_AC = Crawler.Kattis()
     print("完成 Kattis 資料")
 
     TOJ_AC = Crawler.TOJ()
