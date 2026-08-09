@@ -13,3 +13,7 @@ test.*
 settings.json
 /Json/Subs_data.json
 /venv/
+
+# AI agents
+.agents/
+skills-lock.json
