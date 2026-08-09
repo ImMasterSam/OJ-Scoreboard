@@ -12,7 +12,7 @@ STARTUP_DELAY = 0           # (Seconds)
 CHECK_INTERVAL = 10         # (Minutes)
 LOG_INTERVAL = 1            # (Hours)
 LOGGER_BACKUP = 10000
-log2console = True
+log2console = False
 
 Running = True
 

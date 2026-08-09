@@ -2,6 +2,7 @@ import Crawler
 import pandas as pd
 import concurrent.futures
 import os
+import logging
 from rich.progress import Progress, SpinnerColumn, TextColumn
 import json
 from dataclasses import asdict
@@ -44,12 +45,15 @@ def fetch_oj(fetcher: Crawler.OnlineJudgeFetcher, oj_name: str, progress: Progre
     執行單一 OJ 的爬蟲函式，並更新終端機的進度條狀態。
     若爬蟲過程發生錯誤，則攔截錯誤並呼叫 get_fallback_data() 嘗試載入舊資料，避免程式中斷。
     """
+    logging.info(f"<{oj_name}> : Start fetching submissions ......")
     try:
         data = fetcher.fetch()
+        logging.info(f"<{oj_name}> : Submissions fetching COMPLETE  :) ( {len(data)} subs )")
         progress.update(task_id, completed=1, description=f"[green]✔ 完成 {oj_name} 資料[/green]")
         return data
     except Exception as e:
         # Catch exception and fallback to old data
+        logging.error(f"<{oj_name}> : Unable to fetch submissions :( - {type(e).__name__}: {str(e)}")
         progress.update(task_id, completed=1, description=f"[yellow]⚠ {oj_name} 失敗，載入舊資料 ({type(e).__name__})[/yellow]")
         return get_fallback_data(oj_name)
 
