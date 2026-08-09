@@ -16,4 +16,5 @@ settings.json
 
 # AI agents
 .agents/
+.reports/
 skills-lock.json

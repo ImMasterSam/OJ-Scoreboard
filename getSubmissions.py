@@ -3,37 +3,51 @@ import pandas as pd
 import concurrent.futures
 import os
 from rich.progress import Progress, SpinnerColumn, TextColumn
+import json
+from dataclasses import asdict
 
-def get_fallback_data(oj_name: str) -> pd.DataFrame:
+def get_fallback_data(oj_name: str) -> list[Crawler.Submission]:
     """
     從舊有的 JSON 檔案 (Subs_data.json) 中讀取特定 OJ 的歷史資料。
-    如果檔案不存在或讀取失敗，則回傳空的 DataFrame，作為爬蟲失敗時的備用方案。
+    如果檔案不存在或讀取失敗，則回傳空的 list，作為爬蟲失敗時的備用方案。
     """
     file_path = "Json/Subs_data.json"
     if not os.path.exists(file_path):
-        return pd.DataFrame()
+        return []
     try:
         # read_json might fail if file is completely empty
         if os.path.getsize(file_path) == 0:
-            return pd.DataFrame()
+            return []
             
         df = pd.read_json(file_path, orient='records', lines=True)
         if '網站' in df.columns:
             oj_df = df[df['網站'] == oj_name]
-            return oj_df
-        return pd.DataFrame()
+            
+            # Convert DataFrame rows to Crawler.Submission objects
+            fallback_data = []
+            for _, row in oj_df.iterrows():
+                fallback_data.append(Crawler.Submission(
+                    題目名稱=row.get('題目名稱', ''),
+                    完成時間=row.get('完成時間', ''),
+                    程式語言=row.get('程式語言', ''),
+                    結果=row.get('結果', ''),
+                    網站=row.get('網站', ''),
+                    網址=row.get('網址', '')
+                ))
+            return fallback_data
+        return []
     except Exception as e:
-        return pd.DataFrame()
+        return []
 
-def fetch_oj(crawler_func, oj_name: str, progress: Progress, task_id):
+def fetch_oj(fetcher: Crawler.OnlineJudgeFetcher, oj_name: str, progress: Progress, task_id) -> list[Crawler.Submission]:
     """
     執行單一 OJ 的爬蟲函式，並更新終端機的進度條狀態。
     若爬蟲過程發生錯誤，則攔截錯誤並呼叫 get_fallback_data() 嘗試載入舊資料，避免程式中斷。
     """
     try:
-        df = crawler_func()
+        data = fetcher.fetch()
         progress.update(task_id, completed=1, description=f"[green]✔ 完成 {oj_name} 資料[/green]")
-        return df
+        return data
     except Exception as e:
         # Catch exception and fallback to old data
         progress.update(task_id, completed=1, description=f"[yellow]⚠ {oj_name} 失敗，載入舊資料 ({type(e).__name__})[/yellow]")
@@ -42,17 +56,25 @@ def fetch_oj(crawler_func, oj_name: str, progress: Progress, task_id):
 def getSubs():
 
     print("正在蒐集資料...")
+    
+    # 讀取帳號密碼
+    try:
+        with open("settings.json", "r") as f:
+            user_data = json.load(f)
+    except FileNotFoundError:
+        print("CRITICAL ERROR: settings.json not found!")
+        return
 
     crawlers = [
-        (Crawler.Zerojudge, "Zerojudge"),
-        (Crawler.UVa, "UVa"),
-        (Crawler.Kattis, "Kattis"),
-        (Crawler.TOJ, "TOJ"),
-        (Crawler.AtCoder, "AtCoder"),
-        (Crawler.CodeForces, "CodeForces")
+        (Crawler.ZerojudgeFetcher(user_data.get('Zerojudge', {})), "Zerojudge"),
+        (Crawler.UVaFetcher(user_data.get('UVa', {})), "UVa"),
+        (Crawler.KattisFetcher(user_data.get('Kattis', {})), "Kattis"),
+        (Crawler.TOJFetcher(user_data.get('TOJ', {})), "TOJ"),
+        (Crawler.AtCoderFetcher(user_data.get('AtCoder', {})), "AtCoder"),
+        (Crawler.CodeForcesFetcher(user_data.get('CodeForces', {})), "CodeForces")
     ]
 
-    dfs = []
+    all_submissions = []
     
     # Set max_workers capped at logical CPUs but max 6
     max_workers = min(6, os.cpu_count() or 1)
@@ -65,18 +87,19 @@ def getSubs():
         
         futures_to_oj = {}
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-            for func, name in crawlers:
+            for fetcher, name in crawlers:
                 task_id = progress.add_task(f"[cyan]正在獲取 {name} 資料...", total=1)
-                future = executor.submit(fetch_oj, func, name, progress, task_id)
+                future = executor.submit(fetch_oj, fetcher, name, progress, task_id)
                 futures_to_oj[future] = name
             
             for future in concurrent.futures.as_completed(futures_to_oj):
-                df = future.result()
-                if not df.empty:
-                    dfs.append(df)
+                data = future.result()
+                if data:
+                    all_submissions.extend(data)
 
-    if dfs:
-        total_sub_df = pd.concat(dfs, ignore_index=True)
+    if all_submissions:
+        # Convert list of Dataclasses to DataFrame
+        total_sub_df = pd.DataFrame([asdict(sub) for sub in all_submissions])
         if not total_sub_df.empty:
             total_sub_df.sort_values(['完成時間'], inplace=True)
 
