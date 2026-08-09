@@ -8,6 +8,7 @@ dependencies = [
     "autokattis>=2.1.5",
     "bs4>=0.0.2",
     "requests>=2.34.2",
+    "rich>=15.0.0",
     "schedule>=1.2.2",
     "selenium>=4.46.0",
 ]

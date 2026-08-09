@@ -110,7 +110,6 @@ def Zerojudge() -> pd.DataFrame:
                 raw_data.append(submission_data)
 
         url = 'https://zerojudge.tw/Submissions' + soup.select_one('#pagging').find_all('a')[-1]['href']
-        print(url)
 
         if len(soup.select("tr")) <= 2:
             break
