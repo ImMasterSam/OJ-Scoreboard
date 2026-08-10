@@ -59,7 +59,7 @@ class ZerojudgeFetcher(OnlineJudgeFetcher):
         # chrome_options.add_argument('--user-data-dir=C:/Users/USER/AppData/Local/Google/Chrome/User Data') # 使用 Chrome 的使用者資料
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
-        # chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--headless")
 
         # 啟動 Webdriver
         try:
@@ -100,7 +100,7 @@ class ZerojudgeFetcher(OnlineJudgeFetcher):
 
         encoded_account = urllib.parse.quote(self.config['Username'])
         page = 1
-        url = f'https://zerojudge.tw/Submissions?account={encoded_account}&page={page}'
+        url = f'https://zerojudge.tw/Submissions.api?account={encoded_account}&page={page}'
 
         # 保存 cookie
         cookies = browser.get_cookies()
@@ -108,7 +108,7 @@ class ZerojudgeFetcher(OnlineJudgeFetcher):
         browser.close()  # 關閉瀏覽器
 
         raw_data = list()
-        lang_d = {"CPP":"C++", "PYTHON": "Python", "JAVA": "Java"}
+        lang_d = {"CPP":"C++", "PYTHON": "Python", "JAVA": "Java", "C": "C"}
 
         s = requests.Session()
         for cookie in cookies:
@@ -117,39 +117,38 @@ class ZerojudgeFetcher(OnlineJudgeFetcher):
         while True:
 
             lst = s.get(url)
-            print(lst.text)
-            soup = BeautifulSoup(lst.text, 'lxml')
-            
-            print(soup.find_all('tr'))
-
-            for i in soup.find_all('tr')[1:]:
-                tds = i.find_all('td')
-                title = tds[2].text.lstrip().replace('\r', '').replace('\n', '').split(' -- #')[0]
-                date = tds[5].getText().lstrip().replace('\r', '').replace('\n', '').replace('\t', '')
-                result = tds[3].find_all('a')[0].text
-                t_lang = tds[4].select_one('.btn-default').text
-                lang = lang_d[t_lang]
-
-                if(result == "NA"):
-                    result = "WA"
+            try:
+                data = lst.json()
+            except Exception as e:
+                logging.error(f"Failed to parse JSON from Zerojudge API: {e}")
+                break
                 
+            solutions = data.get("data", {}).get("solutions", [])
+            if not solutions:
+                break
+
+            for item in solutions:
+                title = f"{item['problemid']} - {item['problemTitle']}"
+                dt = datetime.datetime.fromtimestamp(item["submittimeMs"] / 1000.0)
+                date = dt.strftime('%Y-%m-%d %H:%M:%S')
+                
+                result = item.get("judgement", "")
+                if result == "NA":
+                    result = "WA"
+                    
+                lang = lang_d.get(item.get("language", ""), item.get("language", ""))
+
                 raw_data.append(Submission(
                     題目名稱=title,
                     完成時間=date,
                     程式語言=lang,
                     結果=result,
                     網站="Zerojudge",
-                    網址=f"https://zerojudge.tw/ShowProblem?problemid={title[:4]}"
+                    網址=f"https://zerojudge.tw/ShowProblem?problemid={item['problemid']}"
                 ))
 
             page += 1
-            url = f'https://zerojudge.tw/Submissions?account={encoded_account}&page={page}'
-            print(url)
-
-            if len(soup.select("tr")) <= 2:
-                break
-
-            
+            url = f'https://zerojudge.tw/Submissions.api?account={encoded_account}&page={page}'
 
         return raw_data
 
