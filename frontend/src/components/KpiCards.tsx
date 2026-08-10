@@ -1,11 +1,21 @@
 import '../css/KpiCards.css';
+import { useKpiData } from '../hooks/useKpiData';
 
 export default function KpiCards() {
+  const { data, loading, error } = useKpiData();
+
+  const formatValue = (val: number | undefined) => {
+    if (loading) return "---";
+    if (error) return "Error";
+    if (val === undefined) return "0";
+    return val.toLocaleString();
+  };
+
   return (
     <div className="kpi-cards-container">
-      <KpiCard label="AC" value="1,279" color="var(--color-ac)" />
-      <KpiCard label="WA" value="567" color="var(--color-wa)" />
-      <KpiCard label="TLE" value="76" color="var(--color-tle)" />
+      <KpiCard label="AC" value={formatValue(data?.ac)} color="var(--color-ac)" />
+      <KpiCard label="WA" value={formatValue(data?.wa)} color="var(--color-wa)" />
+      <KpiCard label="TLE" value={formatValue(data?.tle)} color="var(--color-tle)" />
     </div>
   );
 }

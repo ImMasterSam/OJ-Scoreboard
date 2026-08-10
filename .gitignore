@@ -4,6 +4,7 @@
 *.txt
 !requirements.txt
 *.pkl
+.env
 
 chromedriver.*
 chromedriver
