@@ -20,5 +20,9 @@
         "Key": "...",
         "Secret": "...",
         "Handle": "..."
+    },
+    "Supabase": {
+        "Url": "YOUR_SUPABASE_URL",
+        "Key": "YOUR_SUPABASE_URL"
     }
 }

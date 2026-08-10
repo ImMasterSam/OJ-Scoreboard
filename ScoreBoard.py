@@ -29,9 +29,12 @@ if __name__ == "__main__":
                                               interval = LOG_INTERVAL,
                                               backupCount = LOGGER_BACKUP)
 
-    # 確定 setttings.json 已經存在
-    if not os.path.exists('settings.json'):
-        logging.critical('settings.json not found !!!')
+    # 確定 settings.json 已經存在且格式正確
+    try:
+        from config import load_config
+        load_config()
+    except Exception as e:
+        logging.critical(f'Config error: {e}')
         exit(1)
 
     # 延長啟動時間

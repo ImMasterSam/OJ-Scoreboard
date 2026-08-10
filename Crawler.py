@@ -4,6 +4,7 @@ import json
 from random import randint
 import os
 import logging
+import urllib.parse
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Dict, Any
@@ -31,6 +32,15 @@ class Submission:
     網站: str
     網址: str
 
+    def __post_init__(self):
+        import dateutil.parser
+        if self.完成時間:
+            try:
+                dt = dateutil.parser.parse(self.完成時間)
+                self.完成時間 = dt.strftime('%Y-%m-%d %H:%M:%S')
+            except (ValueError, TypeError):
+                pass
+
 
 class OnlineJudgeFetcher(ABC):
     def __init__(self, config: Dict[str, Any]):
@@ -49,7 +59,7 @@ class ZerojudgeFetcher(OnlineJudgeFetcher):
         # chrome_options.add_argument('--user-data-dir=C:/Users/USER/AppData/Local/Google/Chrome/User Data') # 使用 Chrome 的使用者資料
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
-        chrome_options.add_argument("--headless")
+        # chrome_options.add_argument("--headless")
 
         # 啟動 Webdriver
         try:
@@ -63,31 +73,34 @@ class ZerojudgeFetcher(OnlineJudgeFetcher):
         browser.get("https://zerojudge.tw/Login")
 
         # 自動使用預設資料進入登入頁面
-        username = browser.find_element(By.XPATH,'/html/body/div[4]/div[2]/div[2]/form/div[1]/div/input')
-        password = browser.find_element(By.XPATH,'/html/body/div[4]/div[2]/div[2]/form/div[2]/div/input')
+        username = browser.find_element(By.XPATH,'/html/body/div[3]/div/div/div/div[2]/form/div[1]/div/input')
+        password = browser.find_element(By.XPATH,'/html/body/div[3]/div/div/div/div[2]/form/div[2]/div/input')
         username.send_keys(self.config['Username'])
         password.send_keys(self.config['Password'])
-        loginButton = browser.find_element(By.XPATH,'/html/body/div[4]/div[2]/div[2]/form/button[1]')
+        loginButton = browser.find_element(By.XPATH,'/html/body/div[3]/div/div/div/div[2]/form/button[1]')
         loginButton.click()
 
         # 可以用 Chrome 的資料直接用 Google 登入 (現在暫時不需要)
         # Google = browser.find_element(By.XPATH,'/html[1]/body[1]/div[4]/div[2]/div[2]/a[1]')
         # Google.click()
 
-        sleep(5)  # 等待頁面載入
+        sleep(3)  # 等待頁面載入
 
         # 檢查是否登入成功
         if browser.current_url == "https://zerojudge.tw/Login":
             sleep(2)
-            error_message = browser.find_element(By.XPATH, '/html/body/div[5]/div/div/div[2]/div').text
+            error_message = browser.find_element(By.XPATH, '/html/body/div[3]/div/div/div/div[2]/form/div[1]').text
             print(f"ERROR: Unable to login Zerojudge !!! ({error_message})")
             logging.error(f"Unable to login Zerojudge !!! ({error_message})")
             raise ValueError(f"Unable to login Zerojudge !!! ({error_message})")
 
         # 進入使用者解題統計頁面
         browser.get("https://zerojudge.tw/UserStatistic")
+        sleep(3)
 
-        url = browser.find_element(By.XPATH, "/html/body/div[3]/div/div[1]/div/div[2]/div[9]/a").get_attribute("href")
+        encoded_account = urllib.parse.quote(self.config['Username'])
+        page = 1
+        url = f'https://zerojudge.tw/Submissions?account={encoded_account}&page={page}'
 
         # 保存 cookie
         cookies = browser.get_cookies()
@@ -104,33 +117,39 @@ class ZerojudgeFetcher(OnlineJudgeFetcher):
         while True:
 
             lst = s.get(url)
+            print(lst.text)
             soup = BeautifulSoup(lst.text, 'lxml')
+            
+            print(soup.find_all('tr'))
 
-            for i in soup.find_all('tr'):
-                if i.has_attr("solutionid"):
-                    tds = i.find_all('td')
-                    title = tds[2].text.lstrip().replace('\r', '').replace('\n', '').split(' -- #')[0]
-                    date = tds[5].getText().lstrip().replace('\r', '').replace('\n', '').replace('\t', '')
-                    result = tds[3].find_all('a')[0].text
-                    t_lang = tds[4].select_one('.btn-default').text
-                    lang = lang_d[t_lang]
+            for i in soup.find_all('tr')[1:]:
+                tds = i.find_all('td')
+                title = tds[2].text.lstrip().replace('\r', '').replace('\n', '').split(' -- #')[0]
+                date = tds[5].getText().lstrip().replace('\r', '').replace('\n', '').replace('\t', '')
+                result = tds[3].find_all('a')[0].text
+                t_lang = tds[4].select_one('.btn-default').text
+                lang = lang_d[t_lang]
 
-                    if(result == "NA"):
-                        result = "WA"
-                    
-                    raw_data.append(Submission(
-                        題目名稱=title,
-                        完成時間=date,
-                        程式語言=lang,
-                        結果=result,
-                        網站="Zerojudge",
-                        網址=f"https://zerojudge.tw/ShowProblem?problemid={title[:4]}"
-                    ))
+                if(result == "NA"):
+                    result = "WA"
+                
+                raw_data.append(Submission(
+                    題目名稱=title,
+                    完成時間=date,
+                    程式語言=lang,
+                    結果=result,
+                    網站="Zerojudge",
+                    網址=f"https://zerojudge.tw/ShowProblem?problemid={title[:4]}"
+                ))
 
-            url = 'https://zerojudge.tw/Submissions' + soup.select_one('#pagging').find_all('a')[-1]['href']
+            page += 1
+            url = f'https://zerojudge.tw/Submissions?account={encoded_account}&page={page}'
+            print(url)
 
             if len(soup.select("tr")) <= 2:
                 break
+
+            
 
         return raw_data
 

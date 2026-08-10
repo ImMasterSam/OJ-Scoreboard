@@ -111,3 +111,36 @@ Stacktrace:
 #17 0x7fa2c06aad6c <unknown>
 
 [INFO] 2026/08/09 23:49:33: <Kattis> : Submissions fetching COMPLETE  :) ( 141 subs )
+[INFO] 2026/08/10 16:44:01: <Zerojudge> : Start fetching submissions ......
+[INFO] 2026/08/10 16:44:01: <UVa> : Start fetching submissions ......
+[INFO] 2026/08/10 16:44:01: <Kattis> : Start fetching submissions ......
+[INFO] 2026/08/10 16:44:01: <TOJ> : Start fetching submissions ......
+[INFO] 2026/08/10 16:44:01: <AtCoder> : Start fetching submissions ......
+[INFO] 2026/08/10 16:44:01: <CodeForces> : Start fetching submissions ......
+[INFO] 2026/08/10 16:44:02: <AtCoder> : Submissions fetching COMPLETE  :) ( 94 subs )
+[INFO] 2026/08/10 16:44:02: <CodeForces> : Submissions fetching COMPLETE  :) ( 273 subs )
+[ERROR] 2026/08/10 16:44:02: <Zerojudge> : Unable to fetch submissions :( - NoSuchElementException: Message: no such element: Unable to locate element: {"method":"xpath","selector":"/html/body/div[4]/div[2]/div[2]/form/div[1]/div/input"}
+  (Session info: chrome=147.0.7727.137); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
+Stacktrace:
+#0 0x55cf490fd79a <unknown>
+#1 0x55cf48af9215 <unknown>
+#2 0x55cf48b4bf06 <unknown>
+#3 0x55cf48b4c141 <unknown>
+#4 0x55cf48b97634 <unknown>
+#5 0x55cf48b947d0 <unknown>
+#6 0x55cf48b3f55f <unknown>
+#7 0x55cf48b40321 <unknown>
+#8 0x55cf490c106b <unknown>
+#9 0x55cf490c401d <unknown>
+#10 0x55cf490ad718 <unknown>
+#11 0x55cf490c4bb0 <unknown>
+#12 0x55cf49094150 <unknown>
+#13 0x55cf490ea5e8 <unknown>
+#14 0x55cf490ea7b8 <unknown>
+#15 0x55cf490fc1de <unknown>
+#16 0x7fb8f9849b84 <unknown>
+#17 0x7fb8f98d6d6c <unknown>
+
+[INFO] 2026/08/10 16:44:07: <UVa> : Submissions fetching COMPLETE  :) ( 524 subs )
+[INFO] 2026/08/10 16:44:13: <TOJ> : Submissions fetching COMPLETE  :) ( 104 subs )
+[INFO] 2026/08/10 16:44:14: <Kattis> : Submissions fetching COMPLETE  :) ( 141 subs )

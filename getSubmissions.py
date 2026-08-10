@@ -1,5 +1,4 @@
 import Crawler
-import pandas as pd
 import concurrent.futures
 import os
 import logging
@@ -12,32 +11,13 @@ def get_fallback_data(oj_name: str) -> list[Crawler.Submission]:
     從舊有的 JSON 檔案 (Subs_data.json) 中讀取特定 OJ 的歷史資料。
     如果檔案不存在或讀取失敗，則回傳空的 list，作為爬蟲失敗時的備用方案。
     """
-    file_path = "Json/Subs_data.json"
-    if not os.path.exists(file_path):
-        return []
     try:
-        # read_json might fail if file is completely empty
-        if os.path.getsize(file_path) == 0:
-            return []
-            
-        df = pd.read_json(file_path, orient='records', lines=True)
-        if '網站' in df.columns:
-            oj_df = df[df['網站'] == oj_name]
-            
-            # Convert DataFrame rows to Crawler.Submission objects
-            fallback_data = []
-            for _, row in oj_df.iterrows():
-                fallback_data.append(Crawler.Submission(
-                    題目名稱=row.get('題目名稱', ''),
-                    完成時間=row.get('完成時間', ''),
-                    程式語言=row.get('程式語言', ''),
-                    結果=row.get('結果', ''),
-                    網站=row.get('網站', ''),
-                    網址=row.get('網址', '')
-                ))
-            return fallback_data
-        return []
+        from submission_store import SubmissionStore
+        store = SubmissionStore()
+        all_subs = store.load()
+        return [sub for sub in all_subs if sub.網站 == oj_name]
     except Exception as e:
+        logging.error(f"Failed to load fallback data for {oj_name}: {e}")
         return []
 
 def fetch_oj(fetcher: Crawler.OnlineJudgeFetcher, oj_name: str, progress: Progress, task_id) -> list[Crawler.Submission]:
@@ -63,8 +43,8 @@ def getSubs():
     
     # 讀取帳號密碼
     try:
-        with open("settings.json", "r") as f:
-            user_data = json.load(f)
+        from config import load_config
+        user_data = load_config()
     except FileNotFoundError:
         print("CRITICAL ERROR: settings.json not found!")
         return
@@ -102,16 +82,8 @@ def getSubs():
                     all_submissions.extend(data)
 
     if all_submissions:
-        # Convert list of Dataclasses to DataFrame
-        total_sub_df = pd.DataFrame([asdict(sub) for sub in all_submissions])
-        if not total_sub_df.empty:
-            total_sub_df.sort_values(['完成時間'], inplace=True)
-
-            with open("Json/Subs_data.json", "w+") as f:
-                f.write(total_sub_df.to_json(orient='records', lines=True))
-
-            print(f"完成資料蒐集 ({total_sub_df.shape[0]} 筆) !")
-        else:
-            print("資料蒐集完成，但無任何資料。")
+        from submission_store import SubmissionStore
+        store = SubmissionStore()
+        store.save(all_submissions)
     else:
         print("資料蒐集完成，但無任何資料。")
