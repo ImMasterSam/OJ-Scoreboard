@@ -64,23 +64,42 @@ export default function RecentSubmissionsCard({ className = '' }: { className?: 
           <table className="recent-subs-table">
             <thead>
               <tr>
-                <th>解題網站</th>
+                <th style={{ whiteSpace: 'nowrap', width: '1%' }}>解題網站</th>
                 <th>題目名稱</th>
-                <th>結果</th>
-                <th>完成時間</th>
+                <th style={{ whiteSpace: 'nowrap', width: '1%' }}>完成時間</th>
               </tr>
             </thead>
             <tbody>
               {recentSubs.map((sub, idx) => (
                 <tr key={`${sub['題目名稱']}-${sub['完成時間']}-${idx}`}>
-                  <td>{sub['網站']}</td>
-                  <td className="title-cell" title={sub['題目名稱']}>
-                    {sub['題目名稱']}
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <img
+                        src={`./OJ logos/${sub['網站']}.png`}
+                        alt={sub['網站']}
+                        title={sub['網站']}
+                        style={{ height: '24px' }}
+                      />
+                    </div>
                   </td>
-                  <td style={{ color: getVerdictColor(sub['結果']), fontWeight: 500 }}>
-                    {sub['結果']}
+                  <td
+                    className="title-cell"
+                    title={`[${sub['結果']}] ${sub['題目名稱']}`}
+                    style={{
+                      width: '100%',
+                      borderRight: `4px solid ${getVerdictColor(sub['結果'])}`
+                    }}
+                  >
+                    <a
+                      href={sub['網址']}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: 'inherit', textDecoration: 'none' }}
+                    >
+                      {sub['題目名稱']}
+                    </a>
                   </td>
-                  <td style={{ color: 'var(--text-secondary)' }}>
+                  <td style={{ color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
                     {formatDate(sub['完成時間'])}
                   </td>
                 </tr>

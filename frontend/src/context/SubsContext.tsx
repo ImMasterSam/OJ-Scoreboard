@@ -6,6 +6,7 @@ export interface SubmissionData {
   '結果': string;
   '完成時間': string;
   '題目名稱': string;
+  '網址': string;
 }
 
 interface SubsContextType {
@@ -37,7 +38,7 @@ export function SubsProvider({ children }: { children: ReactNode }) {
         while (fetchMore) {
           const { data: submissions, error: supabaseError } = await supabase
             .from('Submissions')
-            .select('"網站","結果","完成時間","題目名稱"')
+            .select('"網站","結果","完成時間","題目名稱","網址"')
             .range(from, from + step - 1);
 
           if (supabaseError) {
