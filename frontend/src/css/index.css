@@ -20,6 +20,9 @@
   --color-tle: #3B82F6; /* Blue based on original image */
   --color-ce: #F59E0B; /* Amber */
   --color-re: #8B5CF6; /* Violet */
+  --color-mle: #6366F1; /* Indigo */
+  --color-ole: #06B6D4; /* Cyan */
+  --color-rf: #38BDF8; /* Light Blue */
   
   /* Fonts */
   --font-body: 'Inter', sans-serif;

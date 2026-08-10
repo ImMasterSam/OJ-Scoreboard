@@ -3,25 +3,27 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recha
 import { useSubsData } from '../../hooks/useSubsData';
 
 const COLORS: Record<string, string> = {
-  'Zerojudge': '#4F86F7',
-  'UVa': '#D23A5B',
-  'Kattis': '#F5B041',
-  'CodeForces': '#1E8449',
-  'TOJ': '#2E4053',
-  'AtCoder': '#989898ff',
+  'AC': 'var(--color-ac)',
+  'WA': 'var(--color-wa)',
+  'TLE': 'var(--color-tle)',
+  'CE': 'var(--color-ce)',
+  'RE': 'var(--color-re)',
+  'MLE': 'var(--color-mle)',
+  'OLE': 'var(--color-ole)',
+  'RF': 'var(--color-rf)',
 };
 
 const DEFAULT_COLOR = '#8E44AD';
 
-export default function WebsiteDistributionChart() {
+export default function VerdictDistributionChart() {
   const { rawData, loading, error } = useSubsData();
 
   const chartData = useMemo(() => {
     if (!rawData) return [];
     const counts: Record<string, number> = {};
     rawData.forEach(sub => {
-      const site = sub['網站'] || 'Unknown';
-      counts[site] = (counts[site] || 0) + 1;
+      const verdict = sub['結果'] || 'Unknown';
+      counts[verdict] = (counts[verdict] || 0) + 1;
     });
 
     return Object.entries(counts)
@@ -32,7 +34,7 @@ export default function WebsiteDistributionChart() {
   if (loading) {
     return (
       <div className="glass-card col-span-4 skeleton-card">
-        <h2 className="skeleton-title">解題網站</h2>
+        <h2 className="skeleton-title">解題統計</h2>
         <div className="skeleton-content-center" style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div className="loader">Loading...</div>
         </div>
@@ -43,7 +45,7 @@ export default function WebsiteDistributionChart() {
   if (error) {
     return (
       <div className="glass-card col-span-4 skeleton-card">
-        <h2 className="skeleton-title">解題網站</h2>
+        <h2 className="skeleton-title">解題統計</h2>
         <div style={{ color: 'var(--color-wa)', textAlign: 'center', marginTop: '2rem' }}>Error loading data</div>
       </div>
     );
@@ -51,7 +53,7 @@ export default function WebsiteDistributionChart() {
 
   return (
     <div className="glass-card col-span-4 skeleton-card" style={{ minHeight: '300px' }}>
-      <h2 className="skeleton-title">解題網站</h2>
+      <h2 className="skeleton-title">解題統計</h2>
       <div className="skeleton-content-center" style={{ width: '100%', minHeight: '250px' }}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -59,7 +61,7 @@ export default function WebsiteDistributionChart() {
               data={chartData}
               cx="50%"
               cy="50%"
-              innerRadius="50%"
+              innerRadius="60%"
               outerRadius="80%"
               paddingAngle={2}
               dataKey="value"
