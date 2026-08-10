@@ -2,17 +2,19 @@
 import Header from './components/Header';
 import KpiCards from './components/KpiCards';
 import { 
-  WebsiteDistributionSkeleton, 
   VerdictDistributionSkeleton, 
   RecentSubmissionsSkeleton,
   HistoricalSubmissionsSkeleton,
   MonthlyStatsSkeleton
 } from './components/ChartPlaceholders';
 
+import WebsiteDistributionChart from './components/charts/WebsiteDistributionChart';
+
+import { SubsProvider } from './context/SubsContext';
+
 function App() {
   return (
-    <>
-
+    <SubsProvider>
       <main className="main-content">
         <Header />
         
@@ -20,7 +22,7 @@ function App() {
 
         <div className="dashboard-grid">
           {/* Top Row: 3 columns (4-4-4 out of 12) */}
-          <WebsiteDistributionSkeleton />
+          <WebsiteDistributionChart />
           <VerdictDistributionSkeleton />
           <RecentSubmissionsSkeleton />
 
@@ -29,7 +31,7 @@ function App() {
           <MonthlyStatsSkeleton />
         </div>
       </main>
-    </>
+    </SubsProvider>
   )
 }
 
