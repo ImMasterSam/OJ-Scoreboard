@@ -37,4 +37,4 @@ while True:
     offset += 40
 
 browser.close()
-json.dump(d, open("Json/Proset.json", "w+"))
+json.dump(d, open("data/Json/Proset.json", "w+"))

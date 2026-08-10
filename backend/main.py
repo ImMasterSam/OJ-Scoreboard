@@ -6,7 +6,7 @@ import sys
 import logging
 import logging.handlers
 
-from getSubmissions import getSubs
+from scraper.getSubmissions import getSubs
 
 STARTUP_DELAY = 0           # (Seconds)
 CHECK_INTERVAL = 10         # (Minutes)
@@ -21,17 +21,17 @@ if __name__ == "__main__":
     logging.basicConfig(level = logging.INFO,
                         format = '[%(levelname)s] %(asctime)s: %(message)s',
                         datefmt = '%Y/%m/%d %H:%M:%S',
-                        filename = 'ScoreBoard.log')
+                        filename = 'logs/ScoreBoard.log')
     if log2console:
         logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
-    logging.handlers.TimedRotatingFileHandler(filename = "ScoreBoard.log", 
+    logging.handlers.TimedRotatingFileHandler(filename = "logs/ScoreBoard.log", 
                                               when = 'H',
                                               interval = LOG_INTERVAL,
                                               backupCount = LOGGER_BACKUP)
 
     # 確定 settings.json 已經存在且格式正確
     try:
-        from config import load_config
+        from core.config import load_config
         load_config()
     except Exception as e:
         logging.critical(f'Config error: {e}')

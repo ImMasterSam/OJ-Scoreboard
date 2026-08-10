@@ -104,7 +104,7 @@ class ZerojudgeFetcher(OnlineJudgeFetcher):
 
         # 保存 cookie
         cookies = browser.get_cookies()
-        pickle.dump(cookies, open("cookies.pkl", "wb"))
+        pickle.dump(cookies, open("data/cookies.pkl", "wb"))
         browser.close()  # 關閉瀏覽器
 
         raw_data = list()
@@ -254,7 +254,7 @@ class TOJFetcher(OnlineJudgeFetcher):
         pagestep = 20
 
         # 讀取題目名稱
-        with open("Json/Proset.json") as f:
+        with open("data/Json/Proset.json") as f:
             proset_d = json.load(f)
 
         test_res = requests.get(f"https://toj.tfcis.org/oj/chal/?acctid={self.config['UserId']}")

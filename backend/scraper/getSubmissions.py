@@ -1,4 +1,4 @@
-import Crawler
+from scraper import Crawler
 import concurrent.futures
 import os
 import logging
@@ -12,7 +12,7 @@ def get_fallback_data(oj_name: str) -> list[Crawler.Submission]:
     如果檔案不存在或讀取失敗，則回傳空的 list，作為爬蟲失敗時的備用方案。
     """
     try:
-        from submission_store import SubmissionStore
+        from services.submission_store import SubmissionStore
         store = SubmissionStore()
         all_subs = store.load()
         return [sub for sub in all_subs if sub.網站 == oj_name]
@@ -43,7 +43,7 @@ def getSubs():
     
     # 讀取帳號密碼
     try:
-        from config import load_config
+        from core.config import load_config
         user_data = load_config()
     except FileNotFoundError:
         print("CRITICAL ERROR: settings.json not found!")
@@ -82,7 +82,7 @@ def getSubs():
                     all_submissions.extend(data)
 
     if all_submissions:
-        from submission_store import SubmissionStore
+        from services.submission_store import SubmissionStore
         store = SubmissionStore()
         store.save(all_submissions)
     else:

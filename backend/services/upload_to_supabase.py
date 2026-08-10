@@ -2,12 +2,12 @@ import json
 from typing import List
 from datetime import datetime
 from supabase import create_client, Client
-from Crawler import Submission
+from scraper.Crawler import Submission
 
 def load_supabase_config() -> dict:
     """從 settings.json 讀取 Supabase 設定"""
     try:
-        from config import load_config
+        from core.config import load_config
         config = load_config()
         return config.get("Supabase", {})
     except FileNotFoundError:
@@ -38,7 +38,7 @@ if __name__ == "__main__":
         supabase_client = init_supabase_client(supabase_config)
         
         # 3. 使用 SubmissionStore 載入並上傳資料
-        from submission_store import SubmissionStore
+        from services.submission_store import SubmissionStore
         store = SubmissionStore()
         
         print("正在載入資料...")

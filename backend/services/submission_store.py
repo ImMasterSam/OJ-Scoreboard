@@ -1,12 +1,12 @@
 import json
 import os
 from typing import List
-from Crawler import Submission
+from scraper.Crawler import Submission
 from supabase import Client
 from dataclasses import asdict
 
 class SubmissionStore:
-    def __init__(self, json_path: str = "Json/Subs_data.json"):
+    def __init__(self, json_path: str = "data/Json/Subs_data.json"):
         self.json_path = json_path
         
         # 確保資料夾存在
