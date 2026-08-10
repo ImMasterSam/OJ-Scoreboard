@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { useSubsData } from '../../hooks/useSubsData';
 
 const COLORS: Record<string, string> = {
@@ -14,6 +14,36 @@ const COLORS: Record<string, string> = {
 };
 
 const DEFAULT_COLOR = '#8E44AD';
+
+const renderCustomizedLabel = ({ cx, cy, midAngle, outerRadius, percent, name, fill }: any) => {
+  if (percent < 0.02) return null;
+  const RADIAN = Math.PI / 180;
+  const sin = Math.sin(-midAngle * RADIAN);
+  const cos = Math.cos(-midAngle * RADIAN);
+
+  const sx = cx + (outerRadius) * cos;
+  const sy = cy + (outerRadius) * sin;
+  const mx = cx + (outerRadius * 1.15) * cos;
+  const my = cy + (outerRadius * 1.15) * sin;
+  const ex = mx + (cos >= 0 ? 1 : -1) * 15;
+
+  return (
+    <g>
+      <path d={`M${sx},${sy} L${mx},${my} L${ex},${my}`} stroke={fill} fill="none" strokeWidth={3} />
+      <text
+        x={ex + (cos >= 0 ? 1 : -1) * 5}
+        y={my}
+        fill={fill}
+        textAnchor={cos >= 0 ? 'start' : 'end'}
+        dominantBaseline="central"
+        fontSize={20}
+        fontWeight="bold"
+      >
+        {`${name} (${(percent * 100).toFixed(0)}%)`}
+      </text>
+    </g>
+  );
+};
 
 export default function VerdictDistributionChart() {
   const { rawData, loading, error } = useSubsData();
@@ -54,18 +84,20 @@ export default function VerdictDistributionChart() {
   return (
     <div className="glass-card col-span-4 skeleton-card" style={{ minHeight: '300px' }}>
       <h2 className="skeleton-title">解題統計</h2>
-      <div className="skeleton-content-center" style={{ width: '100%', minHeight: '250px' }}>
+      <div className="skeleton-content-center" style={{ width: '100%', height: '100%' }}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
               data={chartData}
               cx="50%"
               cy="50%"
-              innerRadius="60%"
-              outerRadius="80%"
+              innerRadius="50%"
+              outerRadius="75%"
               paddingAngle={2}
               dataKey="value"
               stroke="none"
+              label={renderCustomizedLabel}
+              labelLine={false}
             >
               {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[entry.name] || DEFAULT_COLOR} />
@@ -74,12 +106,6 @@ export default function VerdictDistributionChart() {
             <Tooltip
               contentStyle={{ backgroundColor: '#1E293B', border: '1px solid #334155', borderRadius: '8px', color: '#F8FAFC' }}
               itemStyle={{ color: '#F8FAFC' }}
-            />
-            <Legend
-              verticalAlign="bottom"
-              height={36}
-              iconType="circle"
-              wrapperStyle={{ color: '#94A3B8', fontSize: '0.9rem' }}
             />
           </PieChart>
         </ResponsiveContainer>

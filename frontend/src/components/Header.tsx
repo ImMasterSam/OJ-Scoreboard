@@ -1,20 +1,24 @@
 import '../css/Header.css';
+import KpiCards from './KpiCards';
 
 export default function Header() {
   return (
     <header className="header">
-      <h1>
-        OJ 解題統計
-      </h1>
-      
-      {/* Placeholder for Date Slider */}
-      <div className="date-slider">
-        <span className="date-label">2021/1/12</span>
-        <div className="slider-track">
-          <div className="slider-thumb-left"></div>
-          <div className="slider-thumb-right"></div>
-        </div>
-        <span className="date-label">2025/1/14</span>
+      <div className="header-left">
+        <img src="./favicon.svg" alt="logo" className="header-logo" />
+        <h1>
+          Online Judge 解題統計
+        </h1>
+      </div>
+
+      <div className="header-center">
+        <KpiCards />
+      </div>
+
+      <div className="header-right">
+        <a href="https://github.com/ImMasterSam/OJ-Scoreboard" target="_blank" rel="noopener noreferrer" className="github-link">
+          <img src="./github.svg" alt="GitHub Repo" width={50} height={50} className="github-icon" />
+        </a>
       </div>
     </header>
   );
