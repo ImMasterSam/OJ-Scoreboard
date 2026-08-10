@@ -54,7 +54,7 @@ export default function VerdictDistributionChart() {
   return (
     <div className="glass-card col-span-4 skeleton-card" style={{ minHeight: '300px' }}>
       <h2 className="skeleton-title">解題統計</h2>
-      <div className="skeleton-content-center" style={{ width: '100%', minHeight: '250px' }}>
+      <div className="skeleton-content-center" style={{ width: '100%', height: '100%' }}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie

@@ -2,7 +2,20 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 32px;
+  margin-bottom: 16px;
+  gap: 24px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
 }
 
 .header h1 {
@@ -12,48 +25,32 @@
   letter-spacing: -0.02em;
 }
 
-.date-slider {
+.header-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.header-right {
   display: flex;
   align-items: center;
-  gap: 16px;
-  background: rgba(26, 29, 40, 0.4);
-  padding: 12px 24px;
-  border-radius: 24px;
-  border: 1px solid var(--border-color);
-  min-width: 300px;
 }
 
-.date-label {
-  font-size: 0.875rem;
+.github-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--text-secondary);
-}
-
-.slider-track {
-  flex: 1;
-  height: 4px;
-  background: var(--text-secondary);
-  border-radius: 2px;
-  position: relative;
-}
-
-.slider-thumb-left {
-  position: absolute;
-  top: -4px;
-  left: 0;
-  width: 12px;
-  height: 12px;
+  transition: all 0.3s ease;
+  padding: 8px;
   border-radius: 50%;
-  background: var(--accent-blue);
-  box-shadow: 0 0 8px var(--border-glow);
+  background: rgba(26, 29, 40, 0.4);
+  border: 1px solid var(--border-color);
 }
 
-.slider-thumb-right {
-  position: absolute;
-  top: -4px;
-  right: 0;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: var(--bg-base);
-  border: 2px solid var(--text-secondary);
+.github-link:hover {
+  color: var(--text-primary);
+  background: rgba(26, 29, 40, 0.8);
+  transform: scale(1.1);
+  box-shadow: 0 0 12px var(--border-glow);
 }

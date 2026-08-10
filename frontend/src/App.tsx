@@ -1,6 +1,5 @@
 
 import Header from './components/Header';
-import KpiCards from './components/KpiCards';
 import WebsiteDistributionChart from './components/charts/WebsiteDistributionChart';
 import VerdictDistributionChart from './components/charts/VerdictDistributionChart';
 import SubmissionsOverTimeChart from './components/charts/SubmissionsOverTimeChart';
@@ -14,8 +13,6 @@ function App() {
       <main className="main-content">
         <Header />
         
-        <KpiCards />
-
         <div className="dashboard-grid">
           {/* Top Row: 3 columns (4-4-4 out of 12) */}
           <WebsiteDistributionChart />
