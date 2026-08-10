@@ -22,7 +22,7 @@ export default function KpiCards() {
 
 function KpiCard({ label, value, color }: { label: string, value: string, color: string }) {
   return (
-    <div className="glass-card kpi-card" style={{ borderTop: `4px solid ${color}` }}>
+    <div className="glass-card kpi-card" style={{ borderTop: `4px solid ${color}`, minWidth: '200px' }}>
       <div
         className="kpi-card-glow"
         style={{ background: `linear-gradient(180deg, ${color}33 0%, transparent 100%)` }}

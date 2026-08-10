@@ -32,7 +32,7 @@ export default function SubmissionsOverTimeChart() {
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const key = `${year}-${month}`;
-      
+
       countsByMonth.set(key, (countsByMonth.get(key) || 0) + 1);
     });
 
@@ -51,7 +51,7 @@ export default function SubmissionsOverTimeChart() {
       const key = `${year}-${month}`;
       data.push({
         name: key, // YYYY-MM
-        dateObj: new Date(current), 
+        dateObj: new Date(current),
         count: countsByMonth.get(key) || 0,
       });
       current.setMonth(current.getMonth() + 1);
@@ -84,16 +84,16 @@ export default function SubmissionsOverTimeChart() {
       </div>
       <div className="chart-container" style={{ flexGrow: 1, minHeight: '300px' }}>
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+          <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="colorSubmissions" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={true} />
-            <XAxis 
-              dataKey="name" 
+            <XAxis
+              dataKey="name"
               ticks={chartData.filter(d => d.dateObj.getMonth() === 0).map(d => d.name)}
               tickFormatter={(val: string) => {
                 const year = val.split('-')[0];
@@ -104,33 +104,33 @@ export default function SubmissionsOverTimeChart() {
               tickLine={false}
               axisLine={{ stroke: 'var(--border-color)' }}
             />
-            <YAxis 
+            <YAxis
               stroke="var(--text-secondary)"
               tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
               tickLine={false}
               axisLine={false}
             />
-            <Tooltip 
+            <Tooltip
               contentStyle={{ backgroundColor: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)' }}
               itemStyle={{ color: '#3b82f6', fontWeight: 600 }}
               labelFormatter={(_label, payload) => {
                 if (payload && payload.length > 0) {
                   const dateObj = payload[0].payload.dateObj as Date;
                   if (dateObj && dateObj instanceof Date) {
-                     return `${dateObj.getFullYear()}年${dateObj.getMonth() + 1}月`;
+                    return `${dateObj.getFullYear()}年${dateObj.getMonth() + 1}月`;
                   }
                 }
                 return _label;
               }}
             />
-            <Area 
-              type="monotone" 
-              dataKey="count" 
+            <Area
+              type="monotone"
+              dataKey="count"
               name="提交量"
-              stroke="#3b82f6" 
+              stroke="#3b82f6"
               strokeWidth={3}
-              fillOpacity={1} 
-              fill="url(#colorSubmissions)" 
+              fillOpacity={1}
+              fill="url(#colorSubmissions)"
             />
           </AreaChart>
         </ResponsiveContainer>
