@@ -10,8 +10,9 @@ chromedriver
 test.*
 **/__pycache__/
 
-settings.json
-/Json/Subs_data.json
+backend/core/settings.json
+backend/data/Json/Subs_data.json
+backend/logs/
 /venv/
 
 # AI agents
