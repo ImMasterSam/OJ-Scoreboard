@@ -38,9 +38,12 @@ export default function SubmissionsOverTimeChart() {
 
     if (!minDate || !maxDate) return [];
 
+    const minD = minDate as Date;
+    const maxD = maxDate as Date;
+
     const data = [];
-    const current = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
-    const end = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+    const current = new Date(minD.getFullYear(), minD.getMonth(), 1);
+    const end = new Date(maxD.getFullYear(), maxD.getMonth(), 1);
 
     while (current <= end) {
       const year = current.getFullYear();
