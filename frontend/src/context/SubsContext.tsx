@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useState, useEffect, useMemo, type ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 
 export interface SubmissionData {
@@ -11,20 +11,56 @@ export interface SubmissionData {
 
 interface SubsContextType {
   data: SubmissionData[] | null;
+  filteredData: SubmissionData[] | null;
   loading: boolean;
   error: string | null;
+  selectedWebsite: string | null;
+  selectedVerdict: string | null;
+  setWebsiteFilter: (website: string | null) => void;
+  setVerdictFilter: (verdict: string | null) => void;
+  clearFilters: () => void;
 }
 
 export const SubsContext = createContext<SubsContextType>({
   data: null,
+  filteredData: null,
   loading: true,
   error: null,
+  selectedWebsite: null,
+  selectedVerdict: null,
+  setWebsiteFilter: () => {},
+  setVerdictFilter: () => {},
+  clearFilters: () => {},
 });
 
 export function SubsProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<SubmissionData[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedWebsite, setSelectedWebsite] = useState<string | null>(null);
+  const [selectedVerdict, setSelectedVerdict] = useState<string | null>(null);
+
+  const setWebsiteFilter = (website: string | null) => {
+    setSelectedWebsite(prev => prev === website ? null : website);
+  };
+
+  const setVerdictFilter = (verdict: string | null) => {
+    setSelectedVerdict(prev => prev === verdict ? null : verdict);
+  };
+
+  const clearFilters = () => {
+    setSelectedWebsite(null);
+    setSelectedVerdict(null);
+  };
+
+  const filteredData = useMemo(() => {
+    if (!data) return null;
+    return data.filter(sub => {
+      const matchWebsite = selectedWebsite ? sub['網站'] === selectedWebsite : true;
+      const matchVerdict = selectedVerdict ? sub['結果'] === selectedVerdict : true;
+      return matchWebsite && matchVerdict;
+    });
+  }, [data, selectedWebsite, selectedVerdict]);
 
   useEffect(() => {
     async function fetchSubsData() {
@@ -70,7 +106,17 @@ export function SubsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <SubsContext.Provider value={{ data, loading, error }}>
+    <SubsContext.Provider value={{ 
+      data, 
+      filteredData, 
+      loading, 
+      error, 
+      selectedWebsite, 
+      selectedVerdict, 
+      setWebsiteFilter, 
+      setVerdictFilter, 
+      clearFilters 
+    }}>
       {children}
     </SubsContext.Provider>
   );

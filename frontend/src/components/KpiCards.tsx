@@ -5,7 +5,7 @@ export default function KpiCards() {
   const { data, loading, error } = useSubsData();
 
   const formatValue = (val: number | undefined) => {
-    if (loading) return "---";
+    if (loading) return "...";
     if (error) return "Error";
     if (val === undefined) return "0";
     return val.toLocaleString();

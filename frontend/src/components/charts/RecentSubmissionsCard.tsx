@@ -1,20 +1,22 @@
 import { useContext, useMemo } from 'react';
 import { SubsContext } from '../../context/SubsContext';
+import { RecentSubmissionsSkeleton } from '../ChartPlaceholders';
 
 export default function RecentSubmissionsCard({ className = '' }: { className?: string }) {
-  const { data, loading, error } = useContext(SubsContext);
+  const { data, filteredData, loading, error } = useContext(SubsContext);
 
   const recentSubs = useMemo(() => {
-    if (!data) return [];
+    const dataSource = filteredData || data;
+    if (!dataSource) return [];
 
     // Sort by "完成時間" descending
-    const sortedData = [...data].sort((a, b) => {
+    const sortedData = [...dataSource].sort((a, b) => {
       return new Date(b['完成時間']).getTime() - new Date(a['完成時間']).getTime();
     });
 
     // Take top 30
     return sortedData.slice(0, 30);
-  }, [data]);
+  }, [data, filteredData]);
 
   const getVerdictColor = (verdict: string) => {
     const v = verdict.toUpperCase();
@@ -43,15 +45,15 @@ export default function RecentSubmissionsCard({ className = '' }: { className?: 
     }).format(date);
   };
 
+  if (loading) {
+    return <RecentSubmissionsSkeleton />;
+  }
+
   return (
     <div className={`glass-card ${className}`}>
-      <h2 style={{ marginBottom: '16px' }}>近期提交紀錄</h2>
+      <h2 className="chart-title">近期提交紀錄</h2>
 
-      {loading ? (
-        <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-          載入中...
-        </div>
-      ) : error ? (
+      {error ? (
         <div style={{ padding: '20px', textAlign: 'center', color: 'var(--color-wa)' }}>
           無法載入資料: {error}
         </div>

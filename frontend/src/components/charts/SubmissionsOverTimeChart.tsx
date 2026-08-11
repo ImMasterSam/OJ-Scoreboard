@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useSubsData } from '../../hooks/useSubsData';
+import { HistoricalSubmissionsSkeleton } from '../ChartPlaceholders';
+import { COLORS } from '../../lib/constants';
 import {
   AreaChart,
   Area,
@@ -10,31 +12,98 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
+const CustomTooltip = ({ active, payload, label, isCumulative }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    const dateObj = data.dateObj as Date;
+    const dateLabel = dateObj ? `${dateObj.getFullYear()} 年 ${dateObj.getMonth() + 1} 月` : label;
+    const totalCount = isCumulative ? data.cumulativeCount : data.count;
+    const sitesData: Record<string, number> = isCumulative ? data.cumulativeWebsites : data.websites;
+
+    const sites = Object.entries(sitesData)
+      .filter(([_, count]) => count > 0)
+      .sort((a, b) => b[1] - a[1]);
+
+    return (
+      <div style={{
+        backgroundColor: 'var(--bg-surface)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        border: '1px solid var(--border-color)',
+        borderRadius: '8px',
+        padding: '12px',
+        color: 'var(--text-primary)',
+        minWidth: '160px',
+        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)'
+      }}>
+        <div style={{ fontWeight: 'bold', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border-color)' }}>
+          {dateLabel}
+        </div>
+        {sites.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '10px' }}>
+            {sites.map(([site, count]) => (
+              <div key={site} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: COLORS[site] || '#8E44AD' }} />
+                  <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>{site}</span>
+                </div>
+                <span style={{ fontSize: '14px', fontWeight: 600 }}>{count}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '10px' }}>無提交紀錄</div>
+        )}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid var(--border-color)' }}>
+          <span style={{ fontSize: '14px', fontWeight: 'bold' }}>總計</span>
+          <span style={{ fontSize: '16px', fontWeight: 'bold', color: isCumulative ? '#10b981' : '#3b82f6' }}>{totalCount}</span>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 export default function SubmissionsOverTimeChart() {
-  const { rawData, loading, error } = useSubsData();
+  const { rawData, filteredData, loading, error } = useSubsData();
   const [viewMode, setViewMode] = useState<'monthly' | 'cumulative'>('monthly');
 
   const chartData = useMemo(() => {
-    if (!rawData || rawData.length === 0) return [];
+    const dataSource = filteredData || rawData;
+    if (!dataSource || dataSource.length === 0) return [];
 
-    const countsByMonth = new Map<string, number>();
     let minDate: Date | null = null;
     let maxDate: Date | null = null;
 
-    rawData.forEach((sub) => {
+    if (rawData) {
+      rawData.forEach((sub) => {
+        const dateStr = sub['完成時間'];
+        if (!dateStr) return;
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return;
+
+        if (!minDate || date < minDate) minDate = date;
+        if (!maxDate || date > maxDate) maxDate = date;
+      });
+    }
+
+    const countsByMonth = new Map<string, { total: number, websites: Record<string, number> }>();
+
+    dataSource.forEach((sub) => {
       const dateStr = sub['完成時間'];
       if (!dateStr) return;
       const date = new Date(dateStr);
       if (isNaN(date.getTime())) return;
 
-      if (!minDate || date < minDate) minDate = date;
-      if (!maxDate || date > maxDate) maxDate = date;
-
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const key = `${year}-${month}`;
+      const site = sub['網站'] || 'Unknown';
 
-      countsByMonth.set(key, (countsByMonth.get(key) || 0) + 1);
+      const entry = countsByMonth.get(key) || { total: 0, websites: {} };
+      entry.total += 1;
+      entry.websites[site] = (entry.websites[site] || 0) + 1;
+      countsByMonth.set(key, entry);
     });
 
     if (!minDate || !maxDate) return [];
@@ -44,6 +113,7 @@ export default function SubmissionsOverTimeChart() {
 
     const data = [];
     let cumulative = 0;
+    let cumulativeWebsites: Record<string, number> = {};
     const current = new Date(minD.getFullYear(), minD.getMonth(), 1);
     const end = new Date(maxD.getFullYear(), maxD.getMonth(), 1);
 
@@ -51,28 +121,37 @@ export default function SubmissionsOverTimeChart() {
       const year = current.getFullYear();
       const month = String(current.getMonth() + 1).padStart(2, '0');
       const key = `${year}-${month}`;
-      const monthCount = countsByMonth.get(key) || 0;
-      cumulative += monthCount;
+      const monthData = countsByMonth.get(key) || { total: 0, websites: {} };
+
+      cumulative += monthData.total;
+
+      Object.entries(monthData.websites).forEach(([site, count]) => {
+        cumulativeWebsites[site] = (cumulativeWebsites[site] || 0) + count;
+      });
+
       data.push({
         name: key, // YYYY-MM
         dateObj: new Date(current),
-        count: monthCount,
+        count: monthData.total,
         cumulativeCount: cumulative,
+        websites: { ...monthData.websites },
+        cumulativeWebsites: { ...cumulativeWebsites },
       });
       current.setMonth(current.getMonth() + 1);
     }
 
     return data;
-  }, [rawData]);
+  }, [rawData, filteredData]);
 
   if (loading) {
-    return <div className="chart-card dashboard-item loading" style={{ gridColumn: 'span 8' }}>載入中...</div>;
+    return <HistoricalSubmissionsSkeleton />;
   }
   if (error) {
     return <div className="chart-card dashboard-item error" style={{ gridColumn: 'span 8' }}>Error: {error}</div>;
   }
 
-  const totalSubmissions = rawData ? rawData.length : 0;
+  const dataSource = filteredData || rawData;
+  const totalSubmissions = dataSource ? dataSource.length : 0;
   const isCumulative = viewMode === 'cumulative';
 
   return (
@@ -82,7 +161,7 @@ export default function SubmissionsOverTimeChart() {
           <h2 className="chart-title" style={{ margin: 0 }}>歷年提交量</h2>
           <div style={{ display: 'flex', border: '1px solid var(--border-color)', borderRadius: '6px', overflow: 'hidden' }}>
             <button
-              onClick={() => setViewMode('monthly')}
+              onClick={(e) => { e.stopPropagation(); setViewMode('monthly'); }}
               style={{
                 padding: '6px 12px',
                 border: 'none',
@@ -96,7 +175,7 @@ export default function SubmissionsOverTimeChart() {
               單月
             </button>
             <button
-              onClick={() => setViewMode('cumulative')}
+              onClick={(e) => { e.stopPropagation(); setViewMode('cumulative'); }}
               style={{
                 padding: '6px 12px',
                 border: 'none',
@@ -153,19 +232,7 @@ export default function SubmissionsOverTimeChart() {
               tickLine={false}
               axisLine={false}
             />
-            <Tooltip
-              contentStyle={{ backgroundColor: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)' }}
-              itemStyle={{ color: isCumulative ? '#10b981' : '#3b82f6', fontWeight: 600 }}
-              labelFormatter={(_label, payload) => {
-                if (payload && payload.length > 0) {
-                  const dateObj = payload[0].payload.dateObj as Date;
-                  if (dateObj && dateObj instanceof Date) {
-                    return `${dateObj.getFullYear()}年${dateObj.getMonth() + 1}月`;
-                  }
-                }
-                return _label;
-              }}
-            />
+            <Tooltip content={<CustomTooltip isCumulative={isCumulative} />} />
             <Area
               type="monotone"
               dataKey={isCumulative ? "cumulativeCount" : "count"}
