@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { useSubsData } from '../../hooks/useSubsData';
+import { VerdictDistributionSkeleton } from '../ChartPlaceholders';
 
 const COLORS: Record<string, string> = {
   'AC': 'var(--color-ac)',
@@ -62,14 +63,7 @@ export default function VerdictDistributionChart() {
   }, [rawData]);
 
   if (loading) {
-    return (
-      <div className="glass-card col-span-4 skeleton-card">
-        <h2 className="skeleton-title">解題統計</h2>
-        <div className="skeleton-content-center" style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="loader">Loading...</div>
-        </div>
-      </div>
-    );
+    return <VerdictDistributionSkeleton />;
   }
 
   if (error) {

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useSubsData } from '../../hooks/useSubsData';
+import { HistoricalSubmissionsSkeleton } from '../ChartPlaceholders';
 import {
   AreaChart,
   Area,
@@ -66,7 +67,7 @@ export default function SubmissionsOverTimeChart() {
   }, [rawData]);
 
   if (loading) {
-    return <div className="chart-card dashboard-item loading" style={{ gridColumn: 'span 8' }}>載入中...</div>;
+    return <HistoricalSubmissionsSkeleton />;
   }
   if (error) {
     return <div className="chart-card dashboard-item error" style={{ gridColumn: 'span 8' }}>Error: {error}</div>;

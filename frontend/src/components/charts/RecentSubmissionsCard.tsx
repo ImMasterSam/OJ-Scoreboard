@@ -1,5 +1,6 @@
 import { useContext, useMemo } from 'react';
 import { SubsContext } from '../../context/SubsContext';
+import { RecentSubmissionsSkeleton } from '../ChartPlaceholders';
 
 export default function RecentSubmissionsCard({ className = '' }: { className?: string }) {
   const { data, loading, error } = useContext(SubsContext);
@@ -43,15 +44,15 @@ export default function RecentSubmissionsCard({ className = '' }: { className?: 
     }).format(date);
   };
 
+  if (loading) {
+    return <RecentSubmissionsSkeleton />;
+  }
+
   return (
     <div className={`glass-card ${className}`}>
       <h2 style={{ marginBottom: '16px' }}>近期提交紀錄</h2>
 
-      {loading ? (
-        <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-          載入中...
-        </div>
-      ) : error ? (
+      {error ? (
         <div style={{ padding: '20px', textAlign: 'center', color: 'var(--color-wa)' }}>
           無法載入資料: {error}
         </div>

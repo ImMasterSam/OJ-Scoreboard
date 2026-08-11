@@ -21,6 +21,7 @@
   border-radius: 50%;
   border: 24px solid var(--border-color);
   opacity: 0.5;
+  animation: spin 1.2s linear infinite;
 }
 
 .skeleton-donut-website {
@@ -46,6 +47,19 @@
   align-items: center;
   padding: 0 16px;
   gap: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-list-item::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  animation: shimmer 2s infinite;
 }
 
 .skeleton-list-badge {
@@ -83,26 +97,26 @@
   justify-content: center;
 }
 
-.skeleton-history-number-container {
-  text-align: center;
-  margin-bottom: 24px;
-}
-
-.skeleton-history-number {
-  font-size: 4rem;
-  font-weight: 700;
-}
-
-.skeleton-history-label {
-  font-size: 1.25rem;
-}
 
 .skeleton-area-chart {
-  height: 150px;
+  height: 50%;
   width: 100%;
   background: linear-gradient(180deg, rgba(59, 130, 246, 0.2) 0%, transparent 100%);
-  border-bottom: 2px solid var(--accent-blue);
+  border-top: 2px solid var(--accent-blue);
   border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-area-chart::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  animation: shimmer 2s infinite;
 }
 
 .skeleton-monthly-content {
@@ -117,4 +131,24 @@
   width: 32px;
   background: var(--border-color);
   border-radius: 4px 4px 0 0;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
 }

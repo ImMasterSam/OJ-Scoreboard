@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { useSubsData } from '../../hooks/useSubsData';
+import { WebsiteDistributionSkeleton } from '../ChartPlaceholders';
 
 const COLORS: Record<string, string> = {
   'Zerojudge': '#4F86F7',
@@ -76,14 +77,7 @@ export default function WebsiteDistributionChart() {
   }, [rawData]);
 
   if (loading) {
-    return (
-      <div className="glass-card col-span-4 skeleton-card">
-        <h2 className="skeleton-title">解題網站</h2>
-        <div className="skeleton-content-center" style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="loader">Loading...</div>
-        </div>
-      </div>
-    );
+    return <WebsiteDistributionSkeleton />;
   }
 
   if (error) {
