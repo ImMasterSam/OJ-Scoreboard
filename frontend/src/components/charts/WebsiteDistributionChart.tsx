@@ -3,16 +3,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { useSubsData } from '../../hooks/useSubsData';
 import { WebsiteDistributionSkeleton } from '../ChartPlaceholders';
 
-const COLORS: Record<string, string> = {
-  'Zerojudge': '#4F86F7',
-  'UVa': '#D23A5B',
-  'Kattis': '#F5B041',
-  'CodeForces': '#1E8449',
-  'TOJ': '#2E4053',
-  'AtCoder': '#989898ff',
-};
-
-const DEFAULT_COLOR = '#8E44AD';
+import { COLORS, DEFAULT_COLOR } from '../../lib/constants';
 
 const renderCustomizedLabel = ({ cx, cy, midAngle, outerRadius, percent, name, fill }: any) => {
   if (percent < 0.05) return null;
