@@ -1,3 +1,4 @@
+from re import sub
 import datetime
 from time import time as gettime, sleep
 import json
@@ -402,5 +403,118 @@ class CodeForcesFetcher(OnlineJudgeFetcher):
                 網站="CodeForces",
                 網址=URL
             ))
+
+        return raw_data
+
+class CSESFetcher(OnlineJudgeFetcher):
+    def fetch(self) -> List[Submission]:
+        # 爬蟲瀏覽器參數設定
+        chrome_options = Options()
+        # chrome_options.add_argument('--disable-gpu')  # 禁用 GPU 加速
+        # chrome_options.add_argument('--user-data-dir=C:/Users/USER/AppData/Local/Google/Chrome/User Data') # 使用 Chrome 的使用者資料
+        chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        chrome_options.add_argument("--headless")
+
+        # 啟動 Webdriver
+        try:
+            browser = webdriver.Chrome(options=chrome_options)
+        except:
+            print("CRITICAL ERROR: Unable to find Chrome Driver !!!")
+            logging.critical('Unable to find Chrome Driver !!!')
+            raise WebDriverException
+
+        BASE_URL = 'https://cses.fi'
+        lang_d = {"C++ (C++11)": "C++",
+                  "C++ (C++20)": "C++",
+                  "PYTHON": "Python",}
+        result_d = {"ACCEPTED":"AC",
+                    "WRONG ANSWER":"WA",
+                    "COMPILE ERROR":"CE",
+                    "RUNTIME ERROR":"RE",
+                    "TIME LIMIT EXCEEDED":"TLE",
+                    "MEMORY LIMIT EXCEEDED":"MLE",
+                    "OUTPUT LIMIT EXCEEDED":"OLE"}
+
+        # 進入登入頁面
+        browser.get(f"{BASE_URL}/login")
+
+        # 自動使用預設資料進入登入頁面
+        username = browser.find_element(By.NAME,'nick')
+        password = browser.find_element(By.NAME,'pass')
+        username.send_keys(self.config['Username'])
+        password.send_keys(self.config['Password'])
+        loginButton = browser.find_element(By.XPATH,'/html/body/div[2]/div[2]/div/form/p/input')
+        loginButton.click()
+
+        sleep(3)  # 等待頁面載入
+
+        # 檢查是否登入成功
+        if browser.current_url == f"{BASE_URL}/login":
+            sleep(2)
+            error_message = browser.find_element(By.XPATH, '/html/body/div[2]/div[2]/div/p[1]/span').text
+            print(f"ERROR: Unable to login CSES !!! ({error_message})")
+            logging.error(f"Unable to login CSES !!! ({error_message})")
+            raise ValueError(f"Unable to login CSES !!! ({error_message})")
+
+        # 進入解題列表
+        browser.get(f"{BASE_URL}/problemset/")
+        sleep(3)
+
+        # 保存 cookie
+        cookies = browser.get_cookies()
+        pickle.dump(cookies, open("data/cses_cookies.pkl", "wb"))
+        browser.close()  # 關閉瀏覽器
+
+        raw_data = list()
+
+        loggin_session = requests.Session()
+        for cookie in cookies:
+            loggin_session.cookies.set(cookie['name'], cookie['value'])
+
+        # 取得題目列表 href
+        problemset_page = loggin_session.get(f"{BASE_URL}/problemset/")
+        soup = BeautifulSoup(problemset_page.text, 'lxml')
+        
+        tasks_href = [BASE_URL + task.find('a')['href'] for task in soup.find_all(class_='task')]
+
+        for task in tasks_href:
+
+            # 取得每一題的 Submissions
+            result_link = task.replace('task', 'view')
+            result_page = loggin_session.get(result_link)
+            result_page_soup = BeautifulSoup(result_page.text, 'lxml')
+            submissions_links = [BASE_URL + link.get('href') for link in result_page_soup.find_all(class_='details-link')]
+
+            for sub_link in submissions_links:
+
+                res = loggin_session.get(sub_link)
+                soup = BeautifulSoup(res.text, 'lxml')
+                summary = soup.find(class_='summary-table')
+
+                try:
+                    title = summary.find('a').text
+                    date_text = summary.find_all('tr')[2].find_all('td')[1].text.strip()
+                    date = datetime.datetime.strptime(date_text, '%Y-%m-%d %H:%M:%S %z').astimezone().strftime('%Y-%m-%d %H:%M:%S')
+                    lang_text = summary.find_all('tr')[3].find_all('td')[1].text
+                    lang = lang_d[lang_text]
+                    status = summary.find_all('tr')[4].find_all('td')[1].text
+                    if status == 'READY':
+                        result_text = summary.find_all('tr')[5].find_all('td')[1].text
+                        result = result_d[result_text]
+                    else:
+                        result = result_d[status]
+                
+                    raw_data.append(Submission(
+                        題目名稱=title,
+                        完成時間=date,
+                        程式語言=lang,
+                        結果=result,
+                        網站="CSES",
+                        網址=task
+                    ))
+
+                except Exception as e:
+                    logging.error(f'Error occurs on {sub_link}: {e}')
 
         return raw_data

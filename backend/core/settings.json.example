@@ -21,6 +21,10 @@
         "Secret": "...",
         "Handle": "..."
     },
+    "CSES": {
+        "Username": "...",
+        "Password": "..."
+    },
     "Supabase": {
         "Url": "YOUR_SUPABASE_URL",
         "Key": "YOUR_SUPABASE_URL"

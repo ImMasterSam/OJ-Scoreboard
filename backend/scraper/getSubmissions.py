@@ -29,7 +29,7 @@ def fetch_oj(fetcher: Crawler.OnlineJudgeFetcher, oj_name: str, progress: Progre
     try:
         data = fetcher.fetch()
         logging.info(f"<{oj_name}> : Submissions fetching COMPLETE  :) ( {len(data)} subs )")
-        progress.update(task_id, completed=1, description=f"[green]✔ 完成 {oj_name} 資料[/green]")
+        progress.update(task_id, completed=1, description=f"[green]✔ 完成 {oj_name} 資料 ( {len(data)} 筆 )[/green]")
         return data
     except Exception as e:
         # Catch exception and fallback to old data
@@ -55,13 +55,14 @@ def getSubs():
         (Crawler.KattisFetcher(user_data.get('Kattis', {})), "Kattis"),
         (Crawler.TOJFetcher(user_data.get('TOJ', {})), "TOJ"),
         (Crawler.AtCoderFetcher(user_data.get('AtCoder', {})), "AtCoder"),
-        (Crawler.CodeForcesFetcher(user_data.get('CodeForces', {})), "CodeForces")
+        (Crawler.CodeForcesFetcher(user_data.get('CodeForces', {})), "CodeForces"),
+        (Crawler.CSESFetcher(user_data.get('CSES', {})), "CSES")
     ]
 
     all_submissions = []
     
     # Set max_workers capped at logical CPUs but max 6
-    max_workers = min(6, os.cpu_count() or 1)
+    max_workers = min(len(crawlers), os.cpu_count() or 1)
 
     with Progress(
         SpinnerColumn(),
