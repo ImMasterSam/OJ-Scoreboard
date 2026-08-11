@@ -173,3 +173,11 @@ h1, h2, h3, h4, .display-number {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* 移除 Recharts 元件點擊時預設的白色 focus 外框 */
+.recharts-wrapper,
+.recharts-wrapper *,
+.recharts-surface,
+.recharts-surface * {
+  outline: none !important;
+}
