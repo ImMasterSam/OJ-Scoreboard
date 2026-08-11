@@ -47,12 +47,18 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, outerRadius, percent, name, f
 };
 
 export default function VerdictDistributionChart() {
-  const { rawData, loading, error } = useSubsData();
+  const { rawData, loading, error, selectedWebsite, selectedVerdict, setVerdictFilter } = useSubsData();
 
   const chartData = useMemo(() => {
     if (!rawData) return [];
     const counts: Record<string, number> = {};
-    rawData.forEach(sub => {
+
+    // Cross-filtering: Filter by the other dimension (website) if selected
+    const filteredRaw = selectedWebsite
+      ? rawData.filter(sub => sub['網站'] === selectedWebsite)
+      : rawData;
+
+    filteredRaw.forEach(sub => {
       const verdict = sub['結果'] || 'Unknown';
       counts[verdict] = (counts[verdict] || 0) + 1;
     });
@@ -60,7 +66,7 @@ export default function VerdictDistributionChart() {
     return Object.entries(counts)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value);
-  }, [rawData]);
+  }, [rawData, selectedWebsite]);
 
   if (loading) {
     return <VerdictDistributionSkeleton />;
@@ -77,7 +83,7 @@ export default function VerdictDistributionChart() {
 
   return (
     <div className="glass-card col-span-4 skeleton-card" style={{ minHeight: '300px' }}>
-      <h2 className="skeleton-title">解題統計</h2>
+      <h2 className="chart-title">解題統計</h2>
       <div className="skeleton-content-center" style={{ width: '100%', height: '100%' }}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -93,9 +99,28 @@ export default function VerdictDistributionChart() {
               label={renderCustomizedLabel}
               labelLine={false}
             >
-              {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[entry.name] || DEFAULT_COLOR} />
-              ))}
+              {chartData.map((entry, index) => {
+                const isSelected = selectedVerdict === entry.name;
+                const isDimmed = selectedVerdict && !isSelected;
+                return (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[entry.name] || DEFAULT_COLOR}
+                    opacity={isDimmed ? 0.3 : 1}
+                    style={{
+                      cursor: 'pointer',
+                      outline: 'none',
+                      transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+                      transformOrigin: 'center',
+                      transition: 'all 0.1s ease'
+                    }}
+                    onClick={(e: any) => {
+                      if (e && e.stopPropagation) e.stopPropagation();
+                      setVerdictFilter(entry.name);
+                    }}
+                  />
+                );
+              })}
             </Pie>
             <Tooltip
               contentStyle={{ backgroundColor: '#1E293B', border: '1px solid #334155', borderRadius: '8px', color: '#F8FAFC' }}

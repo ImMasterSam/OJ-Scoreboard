@@ -7,22 +7,34 @@ export function useSubsData() {
     throw new Error('useSubsData must be used within a SubsProvider');
   }
 
-  const { data, loading, error } = context;
+  const { data, filteredData, loading, error, selectedWebsite, selectedVerdict, setWebsiteFilter, setVerdictFilter, clearFilters } = context;
 
-  // Keep the aggregated AC, WA, TLE logic for KpiCards backwards compatibility
+  // Use filteredData for KPIs so they reflect the cross-filtering state
   const kpiData = useMemo(() => {
-    if (!data) return null;
+    const dataSource = filteredData || data;
+    if (!dataSource) return null;
     let ac = 0;
     let wa = 0;
     let tle = 0;
-    data.forEach((sub) => {
+    dataSource.forEach((sub) => {
       const result = sub['結果'];
       if (result === 'AC') ac++;
       else if (result === 'WA') wa++;
       else if (result === 'TLE') tle++;
     });
     return { ac, wa, tle };
-  }, [data]);
+  }, [data, filteredData]);
 
-  return { rawData: data, data: kpiData, loading, error };
+  return { 
+    rawData: data, 
+    filteredData,
+    data: kpiData, 
+    loading, 
+    error,
+    selectedWebsite,
+    selectedVerdict,
+    setWebsiteFilter,
+    setVerdictFilter,
+    clearFilters
+  };
 }

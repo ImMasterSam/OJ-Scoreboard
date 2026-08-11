@@ -12,24 +12,35 @@ import {
 } from 'recharts';
 
 export default function SubmissionsOverTimeChart() {
-  const { rawData, loading, error } = useSubsData();
+  const { rawData, filteredData, loading, error } = useSubsData();
   const [viewMode, setViewMode] = useState<'monthly' | 'cumulative'>('monthly');
 
   const chartData = useMemo(() => {
-    if (!rawData || rawData.length === 0) return [];
+    const dataSource = filteredData || rawData;
+    if (!dataSource || dataSource.length === 0) return [];
 
-    const countsByMonth = new Map<string, number>();
     let minDate: Date | null = null;
     let maxDate: Date | null = null;
 
-    rawData.forEach((sub) => {
+    if (rawData) {
+      rawData.forEach((sub) => {
+        const dateStr = sub['完成時間'];
+        if (!dateStr) return;
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return;
+
+        if (!minDate || date < minDate) minDate = date;
+        if (!maxDate || date > maxDate) maxDate = date;
+      });
+    }
+
+    const countsByMonth = new Map<string, number>();
+
+    dataSource.forEach((sub) => {
       const dateStr = sub['完成時間'];
       if (!dateStr) return;
       const date = new Date(dateStr);
       if (isNaN(date.getTime())) return;
-
-      if (!minDate || date < minDate) minDate = date;
-      if (!maxDate || date > maxDate) maxDate = date;
 
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -64,7 +75,7 @@ export default function SubmissionsOverTimeChart() {
     }
 
     return data;
-  }, [rawData]);
+  }, [rawData, filteredData]);
 
   if (loading) {
     return <HistoricalSubmissionsSkeleton />;
@@ -73,7 +84,8 @@ export default function SubmissionsOverTimeChart() {
     return <div className="chart-card dashboard-item error" style={{ gridColumn: 'span 8' }}>Error: {error}</div>;
   }
 
-  const totalSubmissions = rawData ? rawData.length : 0;
+  const dataSource = filteredData || rawData;
+  const totalSubmissions = dataSource ? dataSource.length : 0;
   const isCumulative = viewMode === 'cumulative';
 
   return (
@@ -83,7 +95,7 @@ export default function SubmissionsOverTimeChart() {
           <h2 className="chart-title" style={{ margin: 0 }}>歷年提交量</h2>
           <div style={{ display: 'flex', border: '1px solid var(--border-color)', borderRadius: '6px', overflow: 'hidden' }}>
             <button
-              onClick={() => setViewMode('monthly')}
+              onClick={(e) => { e.stopPropagation(); setViewMode('monthly'); }}
               style={{
                 padding: '6px 12px',
                 border: 'none',
@@ -97,7 +109,7 @@ export default function SubmissionsOverTimeChart() {
               單月
             </button>
             <button
-              onClick={() => setViewMode('cumulative')}
+              onClick={(e) => { e.stopPropagation(); setViewMode('cumulative'); }}
               style={{
                 padding: '6px 12px',
                 border: 'none',

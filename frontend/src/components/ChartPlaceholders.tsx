@@ -25,7 +25,7 @@ export function VerdictDistributionSkeleton() {
 export function RecentSubmissionsSkeleton() {
   return (
     <div className="glass-card col-span-4 row-span-2 skeleton-card">
-      <h2 className="skeleton-title">最近完成題目</h2>
+      <h2 className="skeleton-title">近期提交紀錄</h2>
       <div className="skeleton-list">
         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => (
           <div key={i} className="skeleton-list-item">

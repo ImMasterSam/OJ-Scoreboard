@@ -61,12 +61,18 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, outerRadius, percent, name, f
 };
 
 export default function WebsiteDistributionChart() {
-  const { rawData, loading, error } = useSubsData();
+  const { rawData, loading, error, selectedWebsite, selectedVerdict, setWebsiteFilter } = useSubsData();
 
   const chartData = useMemo(() => {
     if (!rawData) return [];
     const counts: Record<string, number> = {};
-    rawData.forEach(sub => {
+
+    // Cross-filtering: Filter by the other dimension (verdict) if selected
+    const filteredRaw = selectedVerdict
+      ? rawData.filter(sub => sub['結果'] === selectedVerdict)
+      : rawData;
+
+    filteredRaw.forEach(sub => {
       const site = sub['網站'] || 'Unknown';
       counts[site] = (counts[site] || 0) + 1;
     });
@@ -74,7 +80,7 @@ export default function WebsiteDistributionChart() {
     return Object.entries(counts)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value);
-  }, [rawData]);
+  }, [rawData, selectedVerdict]);
 
   if (loading) {
     return <WebsiteDistributionSkeleton />;
@@ -91,7 +97,7 @@ export default function WebsiteDistributionChart() {
 
   return (
     <div className="glass-card col-span-4 skeleton-card" style={{ minHeight: '300px' }}>
-      <h2 className="skeleton-title">解題網站</h2>
+      <h2 className="chart-title">解題網站</h2>
       <div className="skeleton-content-center" style={{ width: '100%', height: '100%' }}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -107,9 +113,28 @@ export default function WebsiteDistributionChart() {
               label={renderCustomizedLabel}
               labelLine={false}
             >
-              {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[entry.name] || DEFAULT_COLOR} />
-              ))}
+              {chartData.map((entry, index) => {
+                const isSelected = selectedWebsite === entry.name;
+                const isDimmed = selectedWebsite && !isSelected;
+                return (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[entry.name] || DEFAULT_COLOR}
+                    opacity={isDimmed ? 0.3 : 1}
+                    style={{
+                      cursor: 'pointer',
+                      outline: 'none',
+                      transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+                      transformOrigin: 'center',
+                      transition: 'all 0.1s ease'
+                    }}
+                    onClick={(e: any) => {
+                      if (e && e.stopPropagation) e.stopPropagation();
+                      setWebsiteFilter(entry.name);
+                    }}
+                  />
+                );
+              })}
             </Pie>
             <Tooltip
               contentStyle={{ backgroundColor: '#1E293B', border: '1px solid #334155', borderRadius: '8px', color: '#F8FAFC' }}
