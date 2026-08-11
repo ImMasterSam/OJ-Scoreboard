@@ -5,6 +5,7 @@ export const COLORS: Record<string, string> = {
   'CodeForces': '#1E8449',
   'TOJ': '#2E4053',
   'AtCoder': '#989898ff',
+  'CSES': '#fff530ff',
 };
 
 export const DEFAULT_COLOR = '#8E44AD';
