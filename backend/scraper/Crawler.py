@@ -518,3 +518,251 @@ class CSESFetcher(OnlineJudgeFetcher):
                     logging.error(f'Error occurs on {sub_link}: {e}')
 
         return raw_data
+
+class LeetCodeFetcher(OnlineJudgeFetcher):
+    def fetch(self) -> List[Submission]:
+        BASE_URL = 'https://leetcode.com'
+        lang_d = {
+            "cpp": "C++",
+            "c": "C",
+            "java": "Java",
+            "python": "Python",
+            "python3": "Python",
+            "csharp": "C#",
+            "javascript": "JavaScript",
+            "typescript": "TypeScript",
+            "php": "PHP",
+            "swift": "Swift",
+            "kotlin": "Kotlin",
+            "dart": "Dart",
+            "go": "Go",
+            "ruby": "Ruby",
+            "scala": "Scala",
+            "rust": "Rust"
+        }
+        
+        result_d = {
+            "10": "AC",
+            "11": "WA",
+            "12": "MLE",
+            "13": "RE",
+            "14": "TLE",
+            "15": "TLE",
+            "20": "CE",
+            "21": "Unknown Error",
+            "Accepted": "AC",
+            "Wrong Answer": "WA",
+            "Time Limit Exceeded": "TLE",
+            "Memory Limit Exceeded": "MLE",
+            "Runtime Error": "RE",
+            "Compile Error": "CE"
+        }
+
+        question_query = """
+        query userProgressQuestionList($filters: UserProgressQuestionListInput) {
+            userProgressQuestionList(filters: $filters) {
+                totalNum
+                questions {
+                    frontendId
+                    title
+                    titleSlug
+                }
+            }
+        }
+        """
+
+        submission_query = """
+        query userProgressSubmissionList($offset: Int!, $limit: Int!, $questionSlug: String!) {
+            userProgressSubmissionList(
+                offset: $offset
+                limit: $limit
+                questionSlug: $questionSlug
+            ) {
+                submissions {
+                    id
+                    status
+                    langName
+                    timestamp
+                }
+                totalNum
+            }
+        }
+        """
+
+        loggin_session = requests.Session()
+        is_cookie_valid = False
+
+        # 1. 嘗試載入並驗證現有 Cookie
+        try:
+            if os.path.exists("data/leetcode_cookies.pkl"):
+                cookies = pickle.load(open("data/leetcode_cookies.pkl", "rb"))
+                csrf_token = ""
+                for cookie in cookies:
+                    loggin_session.cookies.set(cookie['name'], cookie['value'])
+                    if cookie['name'] == 'csrftoken':
+                        csrf_token = cookie['value']
+
+                loggin_session.headers.update({
+                    'X-CSRFToken': csrf_token,
+                    'Content-Type': 'application/json',
+                    'Referer': f"{BASE_URL}/progress/"
+                })
+
+                # 發送極小花費的 Request 以驗證 Cookie 是否過期
+                payload = {
+                    "query": question_query,
+                    "variables": {
+                        "filters": {
+                            "skip": 0,
+                            "limit": 1
+                        }
+                    }
+                }
+                res = loggin_session.post(f"{BASE_URL}/graphql/", json=payload)
+                if res.status_code == 200:
+                    data = res.json()
+                    if "errors" not in data and "data" in data and "userProgressQuestionList" in data["data"]:
+                        is_cookie_valid = True
+                        logging.info("LeetCode cookies validation passed.")
+        except Exception as e:
+            logging.error(f"Failed to load or validate LeetCode cookies: {e}")
+
+        # 2. 若 Cookie 無效，則打開視窗手動登入
+        if not is_cookie_valid:
+            logging.info("Cookies are invalid or missing. Launching manual login...")
+            import undetected_chromedriver as uc
+            chrome_options = uc.ChromeOptions()
+            chrome_options.add_argument('--no-sandbox')
+            chrome_options.add_argument('--disable-dev-shm-usage')
+
+            try:
+                browser = uc.Chrome(options=chrome_options, version_main=147)
+            except Exception as e:
+                print(f"CRITICAL ERROR: Unable to find Chrome Driver !!! {e}")
+                logging.critical(f'Unable to find Chrome Driver !!! {e}')
+                raise WebDriverException
+
+            browser.get(f"{BASE_URL}/accounts/login/")
+            sleep(3) # 等待頁面載入
+            
+            try:
+                # 幫忙填寫帳號，密碼留空讓使用者手動輸入，避免被抓
+                username = browser.find_element(By.ID, 'id_login')
+                username.send_keys(self.config['Username'])
+            except Exception:
+                pass
+
+            print("=========================================================")
+            print("請手動在彈出的瀏覽器中輸入密碼並完成 Cloudflare 防機器人驗證。")
+            print("程式將會在您登入跳轉後自動繼續...")
+            print("=========================================================")
+
+            # 輪詢直到網址離開 login 頁面
+            while "login" in browser.current_url:
+                sleep(2)
+                
+            sleep(3) # 登入成功後稍等幾秒讓系統寫入 Cookie
+            
+            cookies = browser.get_cookies()
+            if not os.path.exists("data"):
+                os.makedirs("data")
+            pickle.dump(cookies, open("data/leetcode_cookies.pkl", "wb"))
+            browser.close()
+            
+            # 重新利用新的 Cookie 設定 Request Session
+            loggin_session = requests.Session()
+            csrf_token = ""
+            for cookie in cookies:
+                loggin_session.cookies.set(cookie['name'], cookie['value'])
+                if cookie['name'] == 'csrftoken':
+                    csrf_token = cookie['value']
+
+            loggin_session.headers.update({
+                'X-CSRFToken': csrf_token,
+                'Content-Type': 'application/json',
+                'Referer': f"{BASE_URL}/progress/"
+            })
+
+        # 3. 正式抓取 GraphQL 資料
+        raw_data = list()
+
+        # 抓取問題列表
+        skip = 0
+        limit = 50
+        questions = []
+        while True:
+            payload = {
+                "query": question_query,
+                "variables": {
+                    "filters": {
+                        "skip": skip,
+                        "limit": limit
+                    }
+                }
+            }
+            res = loggin_session.post(f"{BASE_URL}/graphql/", json=payload)
+            if res.status_code == 429:
+                logging.warning("LeetCode 429 Rate Limit hit. Waiting for 5 seconds...")
+                sleep(5)
+                continue
+            if res.status_code != 200:
+                logging.error(f"Failed to fetch questions: {res.status_code} {res.text}")
+                break
+                
+            data = res.json()
+            q_list = data.get("data", {}).get("userProgressQuestionList", {}).get("questions", [])
+            if not q_list:
+                break
+                
+            questions.extend(q_list)
+            skip += limit
+            sleep(randint(5, 10) / 10.0)
+
+        # 針對每題抓取 submissions
+        for q in questions:
+            slug = q.get("titleSlug")
+            if not slug:
+                continue
+                
+            sub_payload = {
+                "query": submission_query,
+                "variables": {
+                    "offset": 0,
+                    "limit": 20,
+                    "questionSlug": slug
+                }
+            }
+            
+            while True:
+                res = loggin_session.post(f"{BASE_URL}/graphql/", json=sub_payload)
+                if res.status_code == 429:
+                    logging.warning(f"LeetCode 429 Rate Limit hit on question {slug}. Waiting for 5 seconds...")
+                    sleep(5)
+                    continue
+                if res.status_code != 200:
+                    logging.error(f"Failed to fetch submissions for {slug}: {res.status_code}")
+                    break
+                    
+                data = res.json()
+                subs = data.get("data", {}).get("userProgressSubmissionList", {}).get("submissions", [])
+                
+                for sub in subs:
+                    sub_time = datetime.datetime.fromtimestamp(int(sub["timestamp"])).strftime('%Y-%m-%d %H:%M:%S')
+                    sub_lang = lang_d.get(str(sub.get("langName")), str(sub.get("langName")))
+                    status_str = str(sub.get("status")).split(".")[0]
+                    result = result_d.get(status_str, status_str)
+                    
+                    raw_data.append(Submission(
+                        題目名稱=f"{q.get('frontendId')} - {q.get('title')}",
+                        完成時間=sub_time,
+                        程式語言=sub_lang,
+                        結果=result,
+                        網站="LeetCode",
+                        網址=f"{BASE_URL}/problems/{slug}/description/"
+                    ))
+                    
+                break # Only fetching first page (20 limit) per question
+                
+            sleep(randint(5, 10) / 10.0) # sleep 0.5 ~ 1 sec
+
+        return raw_data

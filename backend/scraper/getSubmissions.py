@@ -56,7 +56,8 @@ def getSubs():
         (Crawler.TOJFetcher(user_data.get('TOJ', {})), "TOJ"),
         (Crawler.AtCoderFetcher(user_data.get('AtCoder', {})), "AtCoder"),
         (Crawler.CodeForcesFetcher(user_data.get('CodeForces', {})), "CodeForces"),
-        (Crawler.CSESFetcher(user_data.get('CSES', {})), "CSES")
+        (Crawler.CSESFetcher(user_data.get('CSES', {})), "CSES"),
+        (Crawler.LeetCodeFetcher(user_data.get('LeetCode', {})), "LeetCode")
     ]
 
     all_submissions = []
