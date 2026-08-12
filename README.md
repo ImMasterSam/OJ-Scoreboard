@@ -1,10 +1,10 @@
-# OJ Scoreboard
+# OJ Dashboard
 
 <div align="center">
 
 **自動爬取多平台 Online Judge 解題記錄，並以視覺化 Dashboard 呈現統計數據。**
 
-[![Deploy](https://github.com/ImMasterSam/OJ-Scoreboard/actions/workflows/deploy.yml/badge.svg)](https://github.com/ImMasterSam/OJ-Scoreboard/actions/workflows/deploy.yml)
+[![Deploy](https://github.com/ImMasterSam/OJ-Dashboard/actions/workflows/deploy.yml/badge.svg)](https://github.com/ImMasterSam/OJ-Dashboard/actions/workflows/deploy.yml)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.13+-3776AB?logo=python&logoColor=white)

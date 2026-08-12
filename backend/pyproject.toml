@@ -1,7 +1,7 @@
 [project]
-name = "oj-scoreboard"
+name = "oj-dashboard"
 version = "26.8"
-description = "A OJ Scoreboard for competitive programming."
+description = "An OJ Dashboard for competitive programming."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [

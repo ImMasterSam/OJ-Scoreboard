@@ -21,10 +21,10 @@ if __name__ == "__main__":
     logging.basicConfig(level = logging.INFO,
                         format = '[%(levelname)s] %(asctime)s: %(message)s',
                         datefmt = '%Y/%m/%d %H:%M:%S',
-                        filename = 'logs/ScoreBoard.log')
+                        filename = 'logs/Dashboard.log')
     if log2console:
         logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
-    logging.handlers.TimedRotatingFileHandler(filename = "logs/ScoreBoard.log", 
+    logging.handlers.TimedRotatingFileHandler(filename = "logs/Dashboard.log", 
                                               when = 'H',
                                               interval = LOG_INTERVAL,
                                               backupCount = LOGGER_BACKUP)
