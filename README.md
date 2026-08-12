@@ -16,21 +16,23 @@
 
 ## 功能概覽
 
-- 🕷️ **多平台自動爬蟲** — 支援 6 大 Online Judge 平台，定時自動抓取解題紀錄
+- 🕷️ **多平台自動爬蟲** — 支援 8 大 Online Judge 平台，定時自動抓取解題紀錄
 - 📊 **視覺化 Dashboard** — 網站分佈、解題結果統計、歷年提交趨勢、近期提交紀錄
-- ☁️ **雲端同步** — 透過 Supabase 儲存資料，前端即時從雲端讀取
+- ☁️ **雲端同步** — 透過 [Supabase](https://supabase.com/) 儲存資料，前端即時從雲端讀取
 - 🚀 **自動部署** — Push 到 `main` 分支自動透過 GitHub Actions 部署至 GitHub Pages
 
 ## 支援的 Online Judge 平台
 
 | 平台 | 資料來源 | 認證方式 |
 |------|---------|---------|
-| **Zerojudge** | Selenium + API | 帳號密碼登入 |
-| **UVa** | uHunt API | User ID |
-| **Kattis** | autokattis 套件 | 帳號密碼 |
-| **TOJ** (TFCIS) | Selenium 爬蟲 | User ID |
-| **AtCoder** | Kenkoooo API | Username |
-| **CodeForces** | Codeforces API | API Key + Secret |
+| **[Zerojudge](https://zerojudge.tw/)** | Selenium + API | 帳號密碼登入 |
+| **[UVa](https://onlinejudge.org/)** | uHunt API | User ID |
+| **[Kattis](https://open.kattis.com/)** | [autokattis](https://pypi.org/project/autokattis/) 套件 | 帳號密碼 |
+| **[TOJ](https://toj.tfcis.org/)** (TFCIS) | Selenium 爬蟲 | User ID |
+| **[AtCoder](https://atcoder.jp/)** | Kenkoooo API | Username |
+| **[CodeForces](https://codeforces.com/)** | Codeforces API | API Key + Secret |
+| **[CSES](https://cses.fi/)** | Selenium + BeautifulSoup | 帳號密碼登入 |
+| **[LeetCode](https://leetcode.com/)** | Selenium + GraphQL | 本地端 Cloudflare 驗證 |
 
 
 ## 快速開始

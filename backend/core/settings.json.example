@@ -21,6 +21,13 @@
         "Secret": "...",
         "Handle": "..."
     },
+    "CSES": {
+        "Username": "...",
+        "Password": "..."
+    },
+    "LeetCode": {
+        "Username": "..."
+    },
     "Supabase": {
         "Url": "YOUR_SUPABASE_URL",
         "Key": "YOUR_SUPABASE_URL"
