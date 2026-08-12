@@ -1,5 +1,7 @@
 
+import { useState } from 'react';
 import Header from './components/Header';
+import SourceCodeView from './components/SourceCodeView';
 import WebsiteDistributionChart from './components/charts/WebsiteDistributionChart';
 import VerdictDistributionChart from './components/charts/VerdictDistributionChart';
 import SubmissionsOverTimeChart from './components/charts/SubmissionsOverTimeChart';
@@ -11,12 +13,15 @@ import { useSubsData } from './hooks/useSubsData';
 
 function Dashboard() {
   const { clearFilters } = useSubsData();
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'source-code'>('dashboard');
+
   return (
     <main className="main-content" onClick={clearFilters}>
-      <Header />
+      <Header activeTab={activeTab} setActiveTab={setActiveTab} />
       
-      <div className="dashboard-grid">
-        {/* Top Row: 3 columns (4-4-4 out of 12) */}
+      {activeTab === 'dashboard' ? (
+        <div className="dashboard-grid">
+          {/* Top Row: 3 columns (4-4-4 out of 12) */}
         <WebsiteDistributionChart />
         <VerdictDistributionChart />
         
@@ -25,7 +30,10 @@ function Dashboard() {
 
         {/* Bottom Row: falls into next row naturally taking 8 columns */}
         <SubmissionsOverTimeChart />
-      </div>
+        </div>
+      ) : (
+        <SourceCodeView />
+      )}
     </main>
   );
 }
