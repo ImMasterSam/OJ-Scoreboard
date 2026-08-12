@@ -16,7 +16,7 @@ export default function Header() {
       </div>
 
       <div className="header-right">
-        <a href="https://github.com/ImMasterSam/OJ-Scoreboard" target="_blank" rel="noopener noreferrer" className="github-link">
+        <a href="https://github.com/ImMasterSam/OJ-Dashboard" target="_blank" rel="noopener noreferrer" className="github-link">
           <img src="./github.svg" alt="GitHub Repo" width={50} height={50} className="github-icon" />
         </a>
       </div>
