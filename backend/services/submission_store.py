@@ -49,7 +49,8 @@ class SubmissionStore:
                         程式語言=data.get("程式語言", ""),
                         結果=data.get("結果", ""),
                         網站=data.get("網站", ""),
-                        網址=data.get("網址", "")
+                        網址=data.get("網址", ""),
+                        id=data.get("id")
                     )
                     submissions.append(sub)
         return submissions
@@ -62,10 +63,10 @@ class SubmissionStore:
             print("沒有要上傳的提交紀錄 (submissions)。")
             return
 
-        # 去重複 (以 網站, 題目名稱, 完成時間 為複合鍵)
+        # 去重複 (以 網站, id 為複合鍵)
         unique_data = {}
         for sub in submissions:
-            key = (sub.網站, sub.題目名稱, sub.完成時間)
+            key = (sub.網站, sub.id)
             unique_data[key] = asdict(sub)
             
         data = list(unique_data.values())
@@ -77,7 +78,7 @@ class SubmissionStore:
             # 執行 upsert
             response = client.table("Submissions").upsert(
                 data, 
-                on_conflict="網站, 題目名稱, 完成時間"
+                on_conflict="網站, id"
             ).execute()
             
             print(f"成功更新或插入 (upsert) 了 {len(data)} 筆資料。")

@@ -2,13 +2,13 @@ from re import sub
 import datetime
 from time import time as gettime, sleep
 import json
-from random import randint
+from random import randint, uniform
 import os
 import logging
 import urllib.parse
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 import requests
 from bs4 import BeautifulSoup
@@ -32,6 +32,7 @@ class Submission:
     結果: str
     網站: str
     網址: str
+    id: int
 
     def __post_init__(self):
         import dateutil.parser
@@ -39,6 +40,12 @@ class Submission:
             try:
                 dt = dateutil.parser.parse(self.完成時間)
                 self.完成時間 = dt.strftime('%Y-%m-%d %H:%M:%S')
+            except (ValueError, TypeError):
+                pass
+        
+        if self.id is not None:
+            try:
+                self.id = int(self.id)
             except (ValueError, TypeError):
                 pass
 
@@ -51,9 +58,78 @@ class OnlineJudgeFetcher(ABC):
     def fetch(self) -> List[Submission]:
         pass
 
+    @property
+    def supports_code_fetch(self) -> bool:
+        """是否支援抓取 submission 的程式碼。子類別若支援，請 override 為 True。"""
+        return False
+
+    def fetch_code(self, submission_id: int) -> Optional[str]:
+        """抓取指定 submission 的程式碼。子類別若支援，請 override 此方法。"""
+        return None
+
 
 class ZerojudgeFetcher(OnlineJudgeFetcher):
-    def fetch(self) -> List[Submission]:
+
+    _cached_session: requests.Session = None
+
+    def _get_authenticated_session(self, force_login: bool = False) -> requests.Session:
+        """
+        取得已認證的 requests.Session。策略：
+        1. 回傳已快取的 instance session（若有且未要求強制重新登入）
+        2. 嘗試從磁碟載入已儲存的 cookie 並驗證是否仍有效
+        3. 都失敗才做完整的 Selenium 登入
+        """
+        # 1. 使用已快取的 session
+        if not force_login and self._cached_session is not None:
+            return self._cached_session
+
+        # 2. 嘗試從磁碟載入已儲存的 cookie
+        if not force_login:
+            session = self._try_load_saved_cookies()
+            if session is not None:
+                self._cached_session = session
+                return session
+
+        # 3. 執行完整的 Selenium 登入
+        session = self._selenium_login()
+        self._cached_session = session
+        return session
+
+    def _try_load_saved_cookies(self) -> requests.Session | None:
+        """嘗試從磁碟載入已儲存的 cookie，並驗證是否仍有效。"""
+        cookie_path = "data/zj_cookies.pkl"
+        if not os.path.exists(cookie_path):
+            return None
+
+        try:
+            cookies = pickle.load(open(cookie_path, "rb"))
+            session = requests.Session()
+            for cookie in cookies:
+                session.cookies.set(cookie['name'], cookie['value'])
+
+            # 用一個輕量請求驗證 cookie 是否仍有效
+            encoded_account = urllib.parse.quote(self.config['Username'])
+            test_url = f'https://zerojudge.tw/Submissions.api?account={encoded_account}&page=1'
+            res = session.get(test_url)
+
+            if res.status_code == 200:
+                try:
+                    data = res.json()
+                    if data.get("data", {}).get("solutions") is not None:
+                        logging.info("Zerojudge: 使用已儲存的 cookie 驗證成功。")
+                        return session
+                except Exception:
+                    pass
+
+            logging.info("Zerojudge: 已儲存的 cookie 已過期，需要重新登入。")
+            return None
+
+        except Exception as e:
+            logging.warning(f"Zerojudge: 載入已儲存的 cookie 時發生錯誤: {e}")
+            return None
+
+    def _selenium_login(self) -> requests.Session:
+        """使用 Selenium 登入 Zerojudge，取得 cookie 後建立已認證的 requests.Session。"""
         # 爬蟲瀏覽器參數設定
         chrome_options = Options()
         # chrome_options.add_argument('--disable-gpu')  # 禁用 GPU 加速
@@ -79,6 +155,7 @@ class ZerojudgeFetcher(OnlineJudgeFetcher):
         username.send_keys(self.config['Username'])
         password.send_keys(self.config['Password'])
         loginButton = browser.find_element(By.XPATH,'/html/body/div[3]/div/div/div/div[2]/form/button[1]')
+        sleep(3)
         loginButton.click()
 
         # 可以用 Chrome 的資料直接用 Google 登入 (現在暫時不需要)
@@ -95,29 +172,35 @@ class ZerojudgeFetcher(OnlineJudgeFetcher):
             logging.error(f"Unable to login Zerojudge !!! ({error_message})")
             raise ValueError(f"Unable to login Zerojudge !!! ({error_message})")
 
-        # 進入使用者解題統計頁面
+        # 進入使用者解題統計頁面（確保 cookie 完整）
         browser.get("https://zerojudge.tw/UserStatistic")
         sleep(3)
+
+        # 保存 cookie 並關閉瀏覽器
+        cookies = browser.get_cookies()
+        pickle.dump(cookies, open("data/zj_cookies.pkl", "wb"))
+        browser.close()
+
+        # 建立已認證的 requests.Session
+        session = requests.Session()
+        for cookie in cookies:
+            session.cookies.set(cookie['name'], cookie['value'])
+
+        return session
+
+    def fetch(self) -> List[Submission]:
+        session = self._get_authenticated_session()
 
         encoded_account = urllib.parse.quote(self.config['Username'])
         page = 1
         url = f'https://zerojudge.tw/Submissions.api?account={encoded_account}&page={page}'
 
-        # 保存 cookie
-        cookies = browser.get_cookies()
-        pickle.dump(cookies, open("data/cookies.pkl", "wb"))
-        browser.close()  # 關閉瀏覽器
-
         raw_data = list()
         lang_d = {"CPP":"C++", "PYTHON": "Python", "JAVA": "Java", "C": "C"}
 
-        s = requests.Session()
-        for cookie in cookies:
-            s.cookies.set(cookie['name'], cookie['value'])
-
         while True:
 
-            lst = s.get(url)
+            lst = session.get(url)
             try:
                 data = lst.json()
             except Exception as e:
@@ -145,13 +228,44 @@ class ZerojudgeFetcher(OnlineJudgeFetcher):
                     程式語言=lang,
                     結果=result,
                     網站="Zerojudge",
-                    網址=f"https://zerojudge.tw/ShowProblem?problemid={item['problemid']}"
+                    網址=f"https://zerojudge.tw/ShowProblem?problemid={item['problemid']}",
+                    id=item['id'],
                 ))
 
             page += 1
             url = f'https://zerojudge.tw/Submissions.api?account={encoded_account}&page={page}'
 
         return raw_data
+
+    @property
+    def supports_code_fetch(self) -> bool:
+        return True
+
+    def fetch_code(self, submission_id: int) -> Optional[str]:
+        """
+        透過 Zerojudge 的 Solution.json API 抓取指定 submission 的程式碼。
+        需要登入後的 session 才能存取。
+        """
+        try:
+            session = self._get_authenticated_session()
+            url = f"https://zerojudge.tw/Solution.json?data=Code&solutionid={submission_id}"
+            res = session.get(url)
+
+            if res.status_code != 200:
+                logging.error(f"<Zerojudge> Failed to fetch code for submission {submission_id}: HTTP {res.status_code}")
+                return None
+
+            data = res.json()
+            code = data.get("code")
+            if code is None:
+                logging.warning(f"<Zerojudge> No code found in response for submission {submission_id}")
+                return None
+
+            return code
+
+        except Exception as e:
+            logging.error(f"<Zerojudge> Error fetching code for submission {submission_id}: {e}")
+            return None
 
 
 class UVaFetcher(OnlineJudgeFetcher):
@@ -194,7 +308,8 @@ class UVaFetcher(OnlineJudgeFetcher):
                 程式語言=lang,
                 結果=result_d[i[2]],
                 網站="UVa",
-                網址=f"https://onlinejudge.org/index.php?option=com_onlinejudge&Itemid=8&page=show_problem&problem={i[1]}"
+                網址=f"https://onlinejudge.org/index.php?option=com_onlinejudge&Itemid=8&page=show_problem&problem={i[1]}",
+                id=i[0],
             ))
 
         return raw_data
@@ -224,7 +339,8 @@ class KattisFetcher(OnlineJudgeFetcher):
                 程式語言=lang,
                 結果=result,
                 網站="Kattis",
-                網址=f"https://open.kattis.com/problems/{i['id']}"
+                網址=f"https://open.kattis.com/problems/{i['id']}",
+                id=i['link'].split('/')[-1],
             ))
 
         return raw_data
@@ -288,7 +404,8 @@ class TOJFetcher(OnlineJudgeFetcher):
                     程式語言=lang,
                     結果=result,
                     網站="TOJ",
-                    網址=f"https://toj.tfcis.org/oj/pro/{id}/"
+                    網址=f"https://toj.tfcis.org/oj/pro/{id}/",
+                    id=tds[0].text,
                 ))
 
             pageoff += pagestep
@@ -332,7 +449,8 @@ class AtCoderFetcher(OnlineJudgeFetcher):
                 程式語言=language,
                 結果=result,
                 網站="AtCoder",
-                網址=URL
+                網址=URL,
+                id=sub['id'],
             ))
         
         return raw_data
@@ -401,7 +519,8 @@ class CodeForcesFetcher(OnlineJudgeFetcher):
                 程式語言=language,
                 結果=result,
                 網站="CodeForces",
-                網址=URL
+                網址=URL,
+                id=sub['id'],
             ))
 
         return raw_data
@@ -499,6 +618,8 @@ class CSESFetcher(OnlineJudgeFetcher):
                     lang_text = summary.find_all('tr')[3].find_all('td')[1].text
                     lang = lang_d[lang_text]
                     status = summary.find_all('tr')[4].find_all('td')[1].text
+                    id = sub_link.split('/')[-2]
+
                     if status == 'READY':
                         result_text = summary.find_all('tr')[5].find_all('td')[1].text
                         result = result_d[result_text]
@@ -511,7 +632,8 @@ class CSESFetcher(OnlineJudgeFetcher):
                         程式語言=lang,
                         結果=result,
                         網站="CSES",
-                        網址=task
+                        網址=task,
+                        id=id,
                     ))
 
                 except Exception as e:
@@ -758,7 +880,8 @@ class LeetCodeFetcher(OnlineJudgeFetcher):
                         程式語言=sub_lang,
                         結果=result,
                         網站="LeetCode",
-                        網址=f"{BASE_URL}/problems/{slug}/description/"
+                        網址=f"{BASE_URL}/problems/{slug}/description/",
+                        id=sub['id'],
                     ))
                     
                 break # Only fetching first page (20 limit) per question

@@ -7,6 +7,8 @@ export interface SubmissionData {
   '完成時間': string;
   '題目名稱': string;
   '網址': string;
+  '程式語言': string;
+  'Code'?: string | null;
 }
 
 interface SubsContextType {
@@ -28,9 +30,9 @@ export const SubsContext = createContext<SubsContextType>({
   error: null,
   selectedWebsite: null,
   selectedVerdict: null,
-  setWebsiteFilter: () => {},
-  setVerdictFilter: () => {},
-  clearFilters: () => {},
+  setWebsiteFilter: () => { },
+  setVerdictFilter: () => { },
+  clearFilters: () => { },
 });
 
 export function SubsProvider({ children }: { children: ReactNode }) {
@@ -74,7 +76,7 @@ export function SubsProvider({ children }: { children: ReactNode }) {
         while (fetchMore) {
           const { data: submissions, error: supabaseError } = await supabase
             .from('Submissions')
-            .select('"網站","結果","完成時間","題目名稱","網址"')
+            .select('"網站","結果","完成時間","題目名稱","網址","程式語言","Code"')
             .range(from, from + step - 1);
 
           if (supabaseError) {
@@ -106,16 +108,16 @@ export function SubsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <SubsContext.Provider value={{ 
-      data, 
-      filteredData, 
-      loading, 
-      error, 
-      selectedWebsite, 
-      selectedVerdict, 
-      setWebsiteFilter, 
-      setVerdictFilter, 
-      clearFilters 
+    <SubsContext.Provider value={{
+      data,
+      filteredData,
+      loading,
+      error,
+      selectedWebsite,
+      selectedVerdict,
+      setWebsiteFilter,
+      setVerdictFilter,
+      clearFilters
     }}>
       {children}
     </SubsContext.Provider>
