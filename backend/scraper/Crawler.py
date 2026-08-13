@@ -32,6 +32,7 @@ class Submission:
     結果: str
     網站: str
     網址: str
+    id: int
 
     def __post_init__(self):
         import dateutil.parser
@@ -39,6 +40,12 @@ class Submission:
             try:
                 dt = dateutil.parser.parse(self.完成時間)
                 self.完成時間 = dt.strftime('%Y-%m-%d %H:%M:%S')
+            except (ValueError, TypeError):
+                pass
+        
+        if self.id is not None:
+            try:
+                self.id = int(self.id)
             except (ValueError, TypeError):
                 pass
 
@@ -145,7 +152,8 @@ class ZerojudgeFetcher(OnlineJudgeFetcher):
                     程式語言=lang,
                     結果=result,
                     網站="Zerojudge",
-                    網址=f"https://zerojudge.tw/ShowProblem?problemid={item['problemid']}"
+                    網址=f"https://zerojudge.tw/ShowProblem?problemid={item['problemid']}",
+                    id=item['id'],
                 ))
 
             page += 1
@@ -194,7 +202,8 @@ class UVaFetcher(OnlineJudgeFetcher):
                 程式語言=lang,
                 結果=result_d[i[2]],
                 網站="UVa",
-                網址=f"https://onlinejudge.org/index.php?option=com_onlinejudge&Itemid=8&page=show_problem&problem={i[1]}"
+                網址=f"https://onlinejudge.org/index.php?option=com_onlinejudge&Itemid=8&page=show_problem&problem={i[1]}",
+                id=i[0],
             ))
 
         return raw_data
@@ -224,7 +233,8 @@ class KattisFetcher(OnlineJudgeFetcher):
                 程式語言=lang,
                 結果=result,
                 網站="Kattis",
-                網址=f"https://open.kattis.com/problems/{i['id']}"
+                網址=f"https://open.kattis.com/problems/{i['id']}",
+                id=i['link'].split('/')[-1],
             ))
 
         return raw_data
@@ -288,7 +298,8 @@ class TOJFetcher(OnlineJudgeFetcher):
                     程式語言=lang,
                     結果=result,
                     網站="TOJ",
-                    網址=f"https://toj.tfcis.org/oj/pro/{id}/"
+                    網址=f"https://toj.tfcis.org/oj/pro/{id}/",
+                    id=tds[0].text,
                 ))
 
             pageoff += pagestep
@@ -332,7 +343,8 @@ class AtCoderFetcher(OnlineJudgeFetcher):
                 程式語言=language,
                 結果=result,
                 網站="AtCoder",
-                網址=URL
+                網址=URL,
+                id=sub['id'],
             ))
         
         return raw_data
@@ -401,7 +413,8 @@ class CodeForcesFetcher(OnlineJudgeFetcher):
                 程式語言=language,
                 結果=result,
                 網站="CodeForces",
-                網址=URL
+                網址=URL,
+                id=sub['id'],
             ))
 
         return raw_data
@@ -499,6 +512,8 @@ class CSESFetcher(OnlineJudgeFetcher):
                     lang_text = summary.find_all('tr')[3].find_all('td')[1].text
                     lang = lang_d[lang_text]
                     status = summary.find_all('tr')[4].find_all('td')[1].text
+                    id = sub_link.split('/')[-2]
+
                     if status == 'READY':
                         result_text = summary.find_all('tr')[5].find_all('td')[1].text
                         result = result_d[result_text]
@@ -511,7 +526,8 @@ class CSESFetcher(OnlineJudgeFetcher):
                         程式語言=lang,
                         結果=result,
                         網站="CSES",
-                        網址=task
+                        網址=task,
+                        id=id,
                     ))
 
                 except Exception as e:
@@ -758,7 +774,8 @@ class LeetCodeFetcher(OnlineJudgeFetcher):
                         程式語言=sub_lang,
                         結果=result,
                         網站="LeetCode",
-                        網址=f"{BASE_URL}/problems/{slug}/description/"
+                        網址=f"{BASE_URL}/problems/{slug}/description/",
+                        id=sub['id'],
                     ))
                     
                 break # Only fetching first page (20 limit) per question

@@ -773,7 +773,7 @@ wheels = [
 ]
 
 [[package]]
-name = "oj-scoreboard"
+name = "oj-dashboard"
 version = "26.8"
 source = { virtual = "." }
 dependencies = [
